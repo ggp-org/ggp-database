@@ -31,7 +31,7 @@ import com.google.appengine.repackaged.org.json.JSONException;
 import com.google.appengine.repackaged.org.json.JSONObject;
 
 @SuppressWarnings("serial")
-public class GGP_FilterServlet extends HttpServlet {
+public class GGP_DatabaseServlet extends HttpServlet {
     public void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws IOException {
         resp.setHeader("Access-Control-Allow-Origin", "*");
