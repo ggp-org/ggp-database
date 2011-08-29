@@ -1,0 +1,144 @@
+body {
+  margin:0;
+  padding:0;
+}
+
+a {
+  text-decoration:none;
+}
+a.apollogo {
+	color: #222222;
+	font-family: 'Droid Sans', bold;
+	font-size: 20px;
+	text-shadow: #AAAAAA 0px 0px 10px;
+	margin: 5px;
+	text-decoration:none;
+}
+span.apollogo2 {
+	color: #222222;
+	font-family: 'Droid Sans', bold;
+	font-size: 16px;
+	text-shadow: #AAAAAA 0px 0px 10px;
+	font-variant: small-caps;
+}
+
+a.darklink {
+	color: #222222;
+}
+a.biglink {
+	color: #222222;
+	font-family: 'Droid Sans', bold;
+	font-size: 20px;
+	text-shadow: #AAAAAA 0px 0px 10px;
+	margin: 5px;
+	text-decoration:none;
+}
+a.hugelink {
+	color: #222222;
+	font-family: 'Droid Sans', bold;
+	font-size: 60px;
+	text-align: left;
+	font-variant: small-caps;
+	text-shadow: #AAAAAA 0px 0px 20px;
+	margin: 5px;
+	text-decoration:none;
+}
+div.login {
+	color: #222222;
+	font-family: 'Droid Sans', bold;
+	font-size: 14px;
+	text-shadow: #AAAAAA 0px 0px 5px;
+	margin: 5px;
+}
+
+table.active {
+    display: inline;
+    border-width: 5px;
+    border-style: ridge;
+    background-color: #52D017;
+    font-family: monospace;
+    font-weight: bold;
+    width: 100%;
+    text-align: center;
+}
+table.inactive {
+    display: inline;
+	border-width: 5px;
+	border-style: ridge;
+	background-color: #E42217;
+    font-family: monospace;
+    font-weight: bold;
+    width: 100%;
+    text-align: center;
+}
+table.gdlVersion {
+    display: inline;
+	border-width: 5px;
+	border-style: ridge;
+	background-color: #56A5EC;
+    font-family: monospace;
+    font-weight: bold;
+    width: 100%;
+    text-align: center;
+}
+table.player {
+    display: table;
+    border-width: 5px;
+    border-style: ridge;
+    width: 450px;
+    float: left;
+    margin: 5px;
+}
+table.matchlist {
+  border:1px solid #cccccc;
+  border-collapse:collapse;
+}
+th.padded {
+  padding-left: 10px;
+}
+td.padded {
+  padding-left: 10px;
+}
+
+tr.navbarTop {
+  background-image: -webkit-gradient(
+    linear,
+    left bottom,
+    left top,
+    color-stop(0.24, rgb(160,160,160)),
+    color-stop(0.81, rgb(130,130,130))
+  );
+  background-image: -moz-linear-gradient(
+    center bottom,
+    rgb(160,160,160) 24%,
+    rgb(130,130,130) 81%
+  );
+}
+tr.navbarBottom {
+  background-image: -webkit-gradient(
+    linear,
+    left bottom,
+    left top,
+    color-stop(0.24, rgb(255,255,255)),
+    color-stop(0.81, rgb(160,160,160))
+  );
+  background-image: -moz-linear-gradient(
+    center bottom,
+    rgb(255,255,255) 24%,
+    rgb(160,160,160) 81%
+  );
+}
+td.navbarBottomAbrupt {
+  background-image: -webkit-gradient(
+    linear,
+    left bottom,
+    left top,
+    color-stop(0.24, #E6E6E6),
+    color-stop(0.81, rgb(160,160,160))
+  );
+  background-image: -moz-linear-gradient(
+    center bottom,
+    #E6E6E6 24%,
+    rgb(160,160,160) 81%
+  );
+}

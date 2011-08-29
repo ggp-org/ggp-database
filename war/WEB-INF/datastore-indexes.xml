@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<datastore-indexes autoGenerate="true">
+    <datastore-index kind="CondensedMatch" ancestor="false">
+        <property name="hashedMatchHostPK" direction="asc" />        
+        <property name="startTime" direction="asc" />
+    </datastore-index>
+    <datastore-index kind="CondensedMatch" ancestor="false">
+        <property name="hashedMatchHostPK" direction="asc" />        
+        <property name="startTime" direction="desc" />
+    </datastore-index>
+    <datastore-index kind="CondensedMatch" ancestor="false">
+        <property name="hashedMatchHostPK" direction="asc" />        
+        <property name="playerNamesFromHost" direction="asc" />
+        <property name="startTime" direction="asc" />
+    </datastore-index>    
+    <datastore-index kind="CondensedMatch" ancestor="false">
+        <property name="hashedMatchHostPK" direction="asc" />        
+        <property name="playerNamesFromHost" direction="asc" />
+        <property name="startTime" direction="desc" />
+    </datastore-index>
+    <datastore-index kind="CondensedMatch" ancestor="false">
+        <property name="hashedMatchHostPK" direction="asc" />        
+        <property name="gameMetaURL" direction="asc" />        
+        <property name="startTime" direction="asc" />
+    </datastore-index>    
+    <datastore-index kind="CondensedMatch" ancestor="false">
+        <property name="hashedMatchHostPK" direction="asc" />        
+        <property name="gameMetaURL" direction="asc" />        
+        <property name="startTime" direction="desc" />
+    </datastore-index>
+    <datastore-index kind="CondensedMatch" ancestor="false">
+        <property name="hashedMatchHostPK" direction="asc" />        
+        <property name="isCompleted" direction="asc" />        
+        <property name="startTime" direction="desc" />
+    </datastore-index>    
+</datastore-indexes>
