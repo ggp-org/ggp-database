@@ -1,5 +1,6 @@
-package ggp.database;
+package ggp.database.notifications;
 
+import ggp.database.Persistence;
 import ggp.database.matches.CondensedMatch;
 
 import java.io.IOException;

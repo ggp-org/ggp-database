@@ -1,4 +1,4 @@
-package ggp.database;
+package ggp.database.notifications;
 
 import ggp.database.matches.CondensedMatch;
 import ggp.database.Persistence;

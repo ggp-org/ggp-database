@@ -4,6 +4,9 @@ import static com.google.appengine.api.taskqueue.RetryOptions.Builder.withTaskRe
 import static com.google.appengine.api.taskqueue.TaskOptions.Builder.withUrl;
 
 import ggp.database.matches.CondensedMatch;
+import ggp.database.notifications.ChannelService;
+import ggp.database.notifications.UpdateRegistry;
+import ggp.database.queries.MatchQuery;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -15,7 +18,6 @@ import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.jdo.Query;
 import javax.servlet.http.*;
 
 import util.configuration.RemoteResourceLoader;
@@ -26,7 +28,6 @@ import com.google.appengine.api.capabilities.Capability;
 import com.google.appengine.api.capabilities.CapabilityStatus;
 import com.google.appengine.api.taskqueue.QueueFactory;
 import com.google.appengine.api.taskqueue.TaskOptions.Method;
-import com.google.appengine.repackaged.org.json.JSONArray;
 import com.google.appengine.repackaged.org.json.JSONException;
 import com.google.appengine.repackaged.org.json.JSONObject;
 
@@ -119,7 +120,7 @@ public class GGP_DatabaseServlet extends HttpServlet {
             return;
         }
         if (reqURI.startsWith("/query/")) {
-            respondToQuery(resp, reqURI.replaceFirst("/query/", ""));
+            MatchQuery.respondToQuery(resp, reqURI.replaceFirst("/query/", ""));
             return;
         }        
 
@@ -174,7 +175,7 @@ public class GGP_DatabaseServlet extends HttpServlet {
         resp.getWriter().println(response.toString());
     }
     
-    public void writeStaticBinaryPage(HttpServletResponse resp, String theURI) throws IOException {
+    public static void writeStaticBinaryPage(HttpServletResponse resp, String theURI) throws IOException {
         InputStream in = new FileInputStream(theURI);
         byte[] buf = new byte[1024];
         while (in.read(buf) > 0) {
@@ -182,84 +183,8 @@ public class GGP_DatabaseServlet extends HttpServlet {
         }
         in.close();        
     }    
-
-    @SuppressWarnings("unchecked")
-    public void respondToQuery(HttpServletResponse resp, String theRPC) throws IOException {
-        JSONObject theResponse = null;
-        if (theRPC.startsWith("filter")) {
-            String[] theSplit = theRPC.split(",");
-            String theVerb = theSplit[0];
-            String theDomain = theSplit[1];
-            String theHost = theSplit[2];
-            
-            if (theVerb.length() == 0 || theDomain.length() == 0 || theHost.length() == 0) {
-                resp.setStatus(404);
-                return;
-            }
-            Query query = Persistence.getPersistenceManager().newQuery(CondensedMatch.class);
-            query.setFilter("hashedMatchHostPK == '" + theHost + "'");
-            if (theVerb.equals("filterPlayer")) {
-                String thePlayer = theSplit[3];
-                if (thePlayer.length() == 0) {
-                    resp.setStatus(404);
-                    return;
-                }
-                query.setFilter("hashedMatchHostPK == '" + theHost + "' && playerNamesFromHost == '" + thePlayer + "'");
-            } else if (theVerb.equals("filterGame")) {
-                String theGame = theSplit[3];
-                if (theGame.length() == 0) {
-                    resp.setStatus(404);
-                    return;
-                }                
-                query.setFilter("hashedMatchHostPK == '" + theHost + "' && gameMetaURL == '" + theGame + "'");
-            } else if (theVerb.equals("filterActiveSet")) {
-                String sixHoursAgo = "" + (System.currentTimeMillis() - 21600000L);
-                query.setFilter("hashedMatchHostPK == '" + theHost + "' && isCompleted == false && startTime > " + sixHoursAgo);
-            } else if (!theVerb.equals("filter")) {
-                resp.setStatus(404);
-                return;
-            }
-            if (theDomain.equals("recent")) {            
-                query.setOrdering("startTime desc");
-                query.setRange(0, 50);
-            } else {
-                resp.setStatus(404);
-                return;
-            }
-            
-            JSONArray theArray = new JSONArray();
-            try {
-                List<CondensedMatch> results = (List<CondensedMatch>) query.execute();
-                if (!results.isEmpty()) {
-                    for (CondensedMatch e : results) {
-                        if (theVerb.equals("filterActiveSet")) {
-                            theArray.put(e.getMatchURL());
-                        } else {
-                            theArray.put(e.getMatchJSON());
-                        }
-                    }
-                } else {
-                    // ... no results ...
-                }
-            } finally {
-                query.closeAll();
-            }
-            
-            try {
-                theResponse = new JSONObject();
-                theResponse.put("queryMatches", theArray);
-            } catch (JSONException je) {
-                ;
-            }
-        }
-        if (theResponse != null) {
-            resp.getWriter().println(theResponse.toString());
-        } else {
-            resp.setStatus(404);
-        }
-    }
     
-    public void respondToRPC(HttpServletResponse resp, String theRPC) throws IOException {
+    public static void respondToRPC(HttpServletResponse resp, String theRPC) throws IOException {
         JSONObject theResponse = null;
         if (theRPC.startsWith("serverState")) {
             String theProperty = theRPC.replaceFirst("serverState/", "");                                
@@ -320,7 +245,7 @@ public class GGP_DatabaseServlet extends HttpServlet {
         }
     }
 
-    public boolean isDatastoreWriteable() {
+    public static boolean isDatastoreWriteable() {
         CapabilitiesService service = CapabilitiesServiceFactory.getCapabilitiesService();
         CapabilityStatus status = service.getStatus(Capability.DATASTORE_WRITE).getStatus();
         return (status != CapabilityStatus.DISABLED);

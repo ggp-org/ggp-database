@@ -1,7 +1,7 @@
 package ggp.database.matches;
 
 import ggp.database.Persistence;
-import ggp.database.UpdateRegistry;
+import ggp.database.notifications.UpdateRegistry;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
