@@ -5,4 +5,9 @@
     <description>Renew the PuSH subscription to completed matches every two days.</description>
     <schedule>every 48 hours</schedule>
   </cron>
+  <cron>
+    <url>/cron/update_stats</url>
+    <description>Update the server statistics every four hours.</description>
+    <schedule>every 4 hours</schedule>
+  </cron>  
 </cronentries>

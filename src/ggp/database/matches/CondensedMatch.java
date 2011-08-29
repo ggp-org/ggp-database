@@ -31,32 +31,32 @@ import com.google.appengine.repackaged.org.json.JSONObject;
 @PersistenceCapable
 @SuppressWarnings("unused")
 public class CondensedMatch {
-    @PrimaryKey @Persistent private String matchURL;
+    @PrimaryKey @Persistent public String matchURL;
     
-    @Persistent private String matchId;
-    @Persistent private long startTime;
-    @Persistent @Extension(vendorName = "datanucleus", key = "gae.unindexed", value="true") private String randomToken;
-    @Persistent private String hashedMatchHostPK;
-    @Persistent private int startClock;
-    @Persistent private int playClock;
-    @Persistent private int moveCount;
-    @Persistent private long matchLength;
-    @Persistent private int matchRoles;
-    @Persistent private boolean hasErrors;
-    @Persistent private boolean allErrors;
-    @Persistent private boolean allErrorsForSomePlayer;
-    @Persistent private boolean isCompleted;
-    @Persistent private String gameMetaURL;
-    @Persistent private String gameName; // TODO: remove this
-    @Persistent private String tournamentNameFromHost;
-    @Persistent private Boolean scrambled;
-    @Persistent private Double weight;
+    @Persistent public String matchId;
+    @Persistent public long startTime;
+    @Persistent @Extension(vendorName = "datanucleus", key = "gae.unindexed", value="true") public String randomToken;
+    @Persistent public String hashedMatchHostPK;
+    @Persistent public int startClock;
+    @Persistent public int playClock;
+    @Persistent public int moveCount;
+    @Persistent public long matchLength;
+    @Persistent public int matchRoles;
+    @Persistent public boolean hasErrors;
+    @Persistent public boolean allErrors;
+    @Persistent public boolean allErrorsForSomePlayer;
+    @Persistent public boolean isCompleted;
+    @Persistent public String gameMetaURL;
+    @Persistent public String gameName; // TODO: remove this
+    @Persistent public String tournamentNameFromHost;
+    @Persistent public Boolean scrambled;
+    @Persistent public Double weight;
 
-    @Persistent private List<String> playerNamesFromHost;
-    @Persistent @Extension(vendorName = "datanucleus", key = "gae.unindexed", value="true") private List<Integer> goalValues;
-    @Persistent @Extension(vendorName = "datanucleus", key = "gae.unindexed", value="true") private List<String> gameRoleNames; // TODO: remove this
-    @Persistent @Extension(vendorName = "datanucleus", key = "gae.unindexed", value="true") private List<Boolean> allErrorsForPlayer;
-    @Persistent @Extension(vendorName = "datanucleus", key = "gae.unindexed", value="true") private List<Boolean> hasErrorsForPlayer;
+    @Persistent public List<String> playerNamesFromHost;
+    @Persistent @Extension(vendorName = "datanucleus", key = "gae.unindexed", value="true") public List<Integer> goalValues;
+    @Persistent @Extension(vendorName = "datanucleus", key = "gae.unindexed", value="true") public List<String> gameRoleNames; // TODO: remove this
+    @Persistent @Extension(vendorName = "datanucleus", key = "gae.unindexed", value="true") public List<Boolean> allErrorsForPlayer;
+    @Persistent @Extension(vendorName = "datanucleus", key = "gae.unindexed", value="true") public List<Boolean> hasErrorsForPlayer;
 
     static class SignatureException extends Exception {
         private static final long serialVersionUID = 1L;

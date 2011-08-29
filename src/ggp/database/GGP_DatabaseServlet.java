@@ -7,6 +7,9 @@ import ggp.database.matches.CondensedMatch;
 import ggp.database.notifications.ChannelService;
 import ggp.database.notifications.UpdateRegistry;
 import ggp.database.queries.MatchQuery;
+import ggp.database.statistics.MatchStatistics;
+import ggp.database.statistics.NewStatisticsComputation;
+import ggp.database.statistics.StatisticsComputation;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -50,6 +53,22 @@ public class GGP_DatabaseServlet extends HttpServlet {
             RemoteResourceLoader.postRawWithTimeout("http://pubsubhubbub.appspot.com/", "hub.callback=" + theCallbackURL + "&hub.mode=subscribe&hub.topic=" + theFeedURL + "&hub.verify=sync&hub.verify_token=" + ss.getValidationToken(), 5000);
             resp.setStatus(200);
             resp.getWriter().println("PuSH subscription sent.");            
+            return;
+        } else if (req.getRequestURI().equals("/cron/update_stats") || req.getRequestURI().equals("/update_stats")) {
+            QueueFactory.getDefaultQueue().add(withUrl("/tasks/update_stats").method(Method.GET).retryOptions(withTaskRetryLimit(0)));
+            //XXX: QueueFactory.getDefaultQueue().add(withUrl("/tasks/update_new_stats").method(Method.GET).retryOptions(withTaskRetryLimit(0)));
+            return;
+        } else if (req.getRequestURI().equals("/tasks/update_stats")) {
+            if (isDatastoreWriteable()) {
+                StatisticsComputation.computeStatistics();
+            }
+            resp.setStatus(200);
+            return;
+        } else if (req.getRequestURI().equals("/tasks/update_new_stats")) {
+            if (isDatastoreWriteable()) {
+                NewStatisticsComputation.computeBatchStatistics();
+            }
+            resp.setStatus(200);
             return;
         }
         
@@ -121,6 +140,10 @@ public class GGP_DatabaseServlet extends HttpServlet {
         }
         if (reqURI.startsWith("/query/")) {
             MatchQuery.respondToQuery(resp, reqURI.replaceFirst("/query/", ""));
+            return;
+        }
+        if (reqURI.startsWith("/statistics/")) {
+            MatchStatistics.respondWithStats(resp, reqURI.replaceFirst("/statistics/", ""));
             return;
         }        
 
