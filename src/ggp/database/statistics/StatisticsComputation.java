@@ -1,7 +1,6 @@
 package ggp.database.statistics;
 
-import ggp.database.Persistence;
-import ggp.database.matches.CondensedMatch;
+import static com.google.appengine.api.datastore.FetchOptions.Builder.withChunkSize;
 import ggp.database.statistics.stored.FinalGameStats;
 import ggp.database.statistics.stored.FinalOverallStats;
 import ggp.database.statistics.stored.FinalPlayerStats;
@@ -20,11 +19,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.jdo.Query;
-
-import org.datanucleus.store.appengine.query.JDOCursorHelper;
-
 import com.google.appengine.api.datastore.Cursor;
+import com.google.appengine.api.datastore.DatastoreService;
+import com.google.appengine.api.datastore.DatastoreServiceConfig;
+import com.google.appengine.api.datastore.DatastoreServiceFactory;
+import com.google.appengine.api.datastore.Entity;
+import com.google.appengine.api.datastore.PreparedQuery;
+import com.google.appengine.api.datastore.Query;
+import com.google.appengine.api.datastore.QueryResultIterator;
+import com.google.appengine.api.datastore.ReadPolicy;
 import com.google.appengine.repackaged.org.json.JSONException;
 import com.google.appengine.repackaged.org.json.JSONObject;
 
@@ -38,47 +41,57 @@ public class StatisticsComputation {
         return matchHostPK;
     }
 
-    @SuppressWarnings("unchecked")
     public static void computeStatistics() throws IOException {
         Map<String, StatisticsComputation> statsForLabel = new HashMap<String, StatisticsComputation>();
         statsForLabel.put("all", new StatisticsComputation());
         statsForLabel.put("unsigned", new StatisticsComputation());
         
+        nComputeBeganAt = System.currentTimeMillis();
         {
-            /* Compute the statistics in a single sorted pass over the data */
+            DatastoreService datastore = DatastoreServiceFactory.getDatastoreService(DatastoreServiceConfig.Builder.withReadPolicy(new ReadPolicy(ReadPolicy.Consistency.EVENTUAL)));        
+            Query q = new Query("CondensedMatch");
+            q.addSort("startTime");
+            PreparedQuery pq = datastore.prepare(q);
+            
+            long startTime;
             String cursorForContinuation = "";
-            while(true) {
-                Query query = Persistence.getPersistenceManager().newQuery(CondensedMatch.class);
-                query.setRange(0,1000);
-                query.getFetchPlan().setFetchSize(100);
-                query.setOrdering("startTime");                
-                if (!cursorForContinuation.isEmpty()) {
-                    Cursor cursor = Cursor.fromWebSafeString(cursorForContinuation);
-                    Map<String, Object> extensionMap = new HashMap<String, Object>();
-                    extensionMap.put(JDOCursorHelper.CURSOR_EXTENSION, cursor);                    
-                    query.setExtensions(extensionMap);
+            
+            do {            
+                QueryResultIterator<Entity> results;
+                if (cursorForContinuation.isEmpty()) {
+                    results = pq.asQueryResultIterator(withChunkSize(1000));
+                } else {
+                    results = pq.asQueryResultIterator(withChunkSize(1000).startCursor(Cursor.fromWebSafeString(cursorForContinuation)));
                 }
-                List<CondensedMatch> results = (List<CondensedMatch>) query.execute();
-                if (results.isEmpty())
-                    break;
-                                
-                for (CondensedMatch match : results) {
-                    statsForLabel.get("all").add(match, true);
-                    if (match.hashedMatchHostPK != null && !match.hashedMatchHostPK.isEmpty()) {
-                      if (!statsForLabel.containsKey(match.hashedMatchHostPK)) {
-                        statsForLabel.put(match.hashedMatchHostPK, new StatisticsComputation());
-                      }
-                      statsForLabel.get(match.hashedMatchHostPK).add(match, false);
-                    } else {
-                      statsForLabel.get("unsigned").add(match, true);
+            
+                // Continuation data, so we can pull in multiple queries worth of data
+                startTime = System.currentTimeMillis();
+                cursorForContinuation = "";
+                
+                /* Compute the statistics in a single sorted pass over the data */            
+                while (results.hasNext()) {
+                    if (System.currentTimeMillis() - startTime > 20000) {
+                        cursorForContinuation = results.getCursor().toWebSafeString();
+                        break;
                     }
-                }
-                Cursor cursor = JDOCursorHelper.getCursor(results);
-                cursorForContinuation = cursor.toWebSafeString();
-            }
+                    
+                    Entity result = results.next();
+                    statsForLabel.get("all").add(result, true);
+                    if (result.getProperty("hashedMatchHostPK") != null) {
+                      String theHostPK = (String)result.getProperty("hashedMatchHostPK");
+                      if (!statsForLabel.containsKey(theHostPK)) {
+                        statsForLabel.put(theHostPK, new StatisticsComputation());
+                      }
+                      statsForLabel.get(theHostPK).add(result, false);
+                    } else {
+                      statsForLabel.get("unsigned").add(result, true);
+                    }
+                }            
+            } while (!cursorForContinuation.isEmpty());
         }
+        nComputeFinishedAt = System.currentTimeMillis();
         
-        // Save all of the statistics
+        // Save all of the statistics        
         for (String theLabel : statsForLabel.keySet()) {
             statsForLabel.get(theLabel).saveAs(theLabel);
         }        
@@ -95,8 +108,9 @@ public class StatisticsComputation {
     MedianPerDay matchesPerDay = new MedianPerDay();
     Map<String,WeightedAverage> playerAverageScore = new HashMap<String,WeightedAverage>();
     Map<String,WeightedAverage> playerDecayedAverageScore = new HashMap<String,WeightedAverage>();
-    Map<String,Map<String,WeightedAverage>> averageScoreOn = new HashMap<String,Map<String,WeightedAverage>>();
-    Map<String,Map<String,WeightedAverage>> averageScoreVersus = new HashMap<String,Map<String,WeightedAverage>>();
+    Map<String,Map<String,WeightedAverage>> computedEdgeOn = new HashMap<String,Map<String,WeightedAverage>>();
+    Map<String,Map<String,WeightedAverage>> averageScoreOn = new HashMap<String,Map<String,WeightedAverage>>();    
+    Map<String,Map<String,WeightedAverage>> averageScoreVersus = new HashMap<String,Map<String,WeightedAverage>>();    
     Map<String,WeightedAverage> gameAverageMoves = new HashMap<String,WeightedAverage>();
     Map<String,Map<String,Map<String,WinLossCounter>>> playerWinsVersusPlayerOnGame = new HashMap<String,Map<String,Map<String,WinLossCounter>>>();
     Map<String,Double> netScores = new HashMap<String,Double>();
@@ -110,47 +124,48 @@ public class StatisticsComputation {
     
     TimeBucketSeries matchesStarted = new TimeBucketSeries();
 
-    long nComputeBeganAt = System.currentTimeMillis();
+    static long nComputeBeganAt, nComputeFinishedAt;
 
-    public void add(CondensedMatch theMatch, boolean addHostToPlayerNames) {
+    @SuppressWarnings("unchecked")
+    public void add(Entity theMatch, boolean addHostToPlayerNames) {
         nMatches++;
-        matchesPerDay.addToDay(1, theMatch.startTime);
-        if (System.currentTimeMillis() - theMatch.startTime < 3600000L) nMatchesInPastHour++;
-        if (System.currentTimeMillis() - theMatch.startTime < 86400000L) nMatchesInPastDay++;
+        matchesPerDay.addToDay(1, (Long)theMatch.getProperty("startTime"));
+        if (System.currentTimeMillis() - (Long)theMatch.getProperty("startTime") < 3600000L) nMatchesInPastHour++;
+        if (System.currentTimeMillis() - (Long)theMatch.getProperty("startTime") < 86400000L) nMatchesInPastDay++;
         
         // TODO: Use a better way to determine the number of players in the match,
         // that works for matches that haven't been signed.
-        if (theMatch.playerNamesFromHost != null) {
-            playersPerMatch.addValue(theMatch.playerNamesFromHost.size());
+        if (theMatch.getProperty("playerNamesFromHost") != null) {
+            playersPerMatch.addValue(((List<String>)theMatch.getProperty("playerNamesFromHost")).size());
         }
         
-        if (theMatch.isCompleted) {
+        if ((Boolean)theMatch.getProperty("isCompleted")) {
             nMatchesFinished++;
-            movesPerMatch.addValue(theMatch.moveCount);
+            movesPerMatch.addValue((Long)theMatch.getProperty("moveCount"));
 
-            String theGame = theMatch.gameMetaURL;
+            String theGame = (String)theMatch.getProperty("gameMetaURL");
             if (!gameAverageMoves.containsKey(theGame)) {
                 gameAverageMoves.put(theGame, new WeightedAverage());
             }
-            gameAverageMoves.get(theGame).addValue(theMatch.moveCount);
+            gameAverageMoves.get(theGame).addValue((Long)theMatch.getProperty("moveCount"));
             theGameNames.add(theGame);
 
-            boolean matchHadErrors = theMatch.hasErrors;                
-            matchesStarted.addEntry(theMatch.startTime);
+            boolean matchHadErrors = (Boolean)theMatch.getProperty("hasErrors");                
+            matchesStarted.addEntry((Long)theMatch.getProperty("startTime"));
 
             // Only compute score-related statistics for matches with named players
             // within a specified player namespace.
-            if (theMatch.playerNamesFromHost != null && theMatch.hashedMatchHostPK != null && !theMatch.hashedMatchHostPK.isEmpty()) {
+            if (theMatch.getProperty("playerNamesFromHost") != null && theMatch.getProperty("hashedMatchHostPK") != null) {
                 List<String> matchPlayers = new ArrayList<String>();
-                for (int i = 0; i < theMatch.playerNamesFromHost.size(); i++) {
-                    matchPlayers.add( (addHostToPlayerNames ? getHostName(theMatch.hashedMatchHostPK)+"." : "") + theMatch.playerNamesFromHost.get(i));
+                for (int i = 0; i < ((List<String>)theMatch.getProperty("playerNamesFromHost")).size(); i++) {
+                    matchPlayers.add( (addHostToPlayerNames ? getHostName((String)theMatch.getProperty("hashedMatchHostPK"))+"." : "") + ((List<String>)theMatch.getProperty("playerNamesFromHost")).get(i));
                 }
                 thePlayerNames.addAll(matchPlayers);
 
                 // Score-related statistics.                        
                 for (int i = 0; i < matchPlayers.size(); i++) {
                     String aPlayer = matchPlayers.get(i);
-                    int aPlayerScore = theMatch.goalValues.get(i);
+                    int aPlayerScore = ((List<Long>)theMatch.getProperty("goalValues")).get(i).intValue();
 
                     if (!matchHadErrors) {
                         if (!netScores.containsKey(aPlayer)) {
@@ -164,7 +179,7 @@ public class StatisticsComputation {
                     }
                     playerAverageScore.get(aPlayer).addValue(aPlayerScore);
 
-                    double ageInDays = (double)(System.currentTimeMillis() - theMatch.startTime) / (double)(86400000L);
+                    double ageInDays = (double)(System.currentTimeMillis() - (Long)theMatch.getProperty("startTime")) / (double)(86400000L);
                     if (!playerDecayedAverageScore.containsKey(aPlayer)) {
                         playerDecayedAverageScore.put(aPlayer, new WeightedAverage());
                     }
@@ -180,7 +195,7 @@ public class StatisticsComputation {
 
                     for (int j = 0; j < matchPlayers.size(); j++) {
                         String bPlayer = matchPlayers.get(j);
-                        int bPlayerScore = theMatch.goalValues.get(j);
+                        int bPlayerScore = ((List<Long>)theMatch.getProperty("goalValues")).get(j).intValue();
                         if (bPlayer.equals(aPlayer))
                             continue;
 
@@ -207,6 +222,17 @@ public class StatisticsComputation {
                         if (aPlayerScore + bPlayerScore == 100) {
                             theEloRank.addNextMatch(aPlayer, bPlayer, aPlayerScore, bPlayerScore);
                             theAgonRank.addNextMatch(aPlayer, bPlayer, aPlayerScore, bPlayerScore);
+                        
+                            // Update the computed edge for the player on the game.
+                            if (!computedEdgeOn.containsKey(aPlayer)) {
+                                computedEdgeOn.put(aPlayer, new HashMap<String,WeightedAverage>());
+                            }
+                            if (!computedEdgeOn.get(aPlayer).containsKey(theGame)) {
+                                computedEdgeOn.get(aPlayer).put(theGame, new WeightedAverage());
+                            }
+                            double edgeDelta = (double)(aPlayerScore-bPlayerScore)/100.0;
+                            edgeDelta /= 1.0+Math.exp(theAgonRank.getComputedSkill(aPlayer)-theAgonRank.getComputedSkill(bPlayer));
+                            computedEdgeOn.get(aPlayer).get(theGame).addValue(edgeDelta);
                         }
                     }
                     
@@ -219,9 +245,6 @@ public class StatisticsComputation {
     }
     
     public void saveAs(String theLabel) {
-        /* Finally we're done with computing statistics */
-        long nComputeTime = System.currentTimeMillis() - nComputeBeganAt;
-
         // Store the statistics as a JSON object in the datastore.
         try {
             JSONObject overall = new JSONObject();
@@ -235,7 +258,7 @@ public class StatisticsComputation {
             overall.put("matchesAverageMoves", movesPerMatch.getWeightedAverage());
             overall.put("matchesAveragePlayers", playersPerMatch.getWeightedAverage());
             overall.put("matchesStatErrors", nMatchesStatErrors);
-            overall.put("computeTime", nComputeTime);
+            overall.put("computeTime", nComputeFinishedAt - nComputeBeganAt);
             overall.put("computeRAM", Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory());
             overall.put("leaderboard", playerAverageScore);
             overall.put("decayedLeaderboard", playerDecayedAverageScore);
@@ -255,6 +278,7 @@ public class StatisticsComputation {
                 perPlayer.put(playerName, new JSONObject());
                 perPlayer.get(playerName).put("averageScore", playerAverageScore.get(playerName));                
                 perPlayer.get(playerName).put("decayedAverageScore", playerDecayedAverageScore.get(playerName));
+                perPlayer.get(playerName).put("computedEdgeOn", computedEdgeOn.get(playerName));
                 perPlayer.get(playerName).put("averageScoreOn", averageScoreOn.get(playerName));
                 perPlayer.get(playerName).put("averageScoreVersus", averageScoreVersus.get(playerName));
                 perPlayer.get(playerName).put("winsVersusPlayerOnGame", playerWinsVersusPlayerOnGame.get(playerName));

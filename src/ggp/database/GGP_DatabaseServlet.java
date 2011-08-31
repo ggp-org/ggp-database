@@ -70,7 +70,7 @@ public class GGP_DatabaseServlet extends HttpServlet {
             }
             resp.setStatus(200);
             return;
-        }
+        }     
         
         if (reqURI.equals("/ingestion/")) {
             // Handle the PuSH subscriber confirmation

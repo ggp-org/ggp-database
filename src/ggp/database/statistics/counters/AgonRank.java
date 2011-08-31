@@ -47,6 +47,10 @@ public class AgonRank {
         dirty = true;
     }
     
+    public double getComputedSkill(String aPlayer) {
+        return theInternalRank.getComputedRanks().get(aPlayer);
+    }
+    
     public void computeResultsWhenNeeded() {
         if (!dirty)
             return;
