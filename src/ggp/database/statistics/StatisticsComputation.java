@@ -230,9 +230,8 @@ public class StatisticsComputation {
                             if (!computedEdgeOn.get(aPlayer).containsKey(theGame)) {
                                 computedEdgeOn.get(aPlayer).put(theGame, new WeightedAverage());
                             }
-                            double edgeDelta = (double)(aPlayerScore-bPlayerScore)/100.0;
-                            edgeDelta /= 1.0+Math.exp(theAgonRank.getComputedSkill(aPlayer)-theAgonRank.getComputedSkill(bPlayer));
-                            computedEdgeOn.get(aPlayer).get(theGame).addValue(edgeDelta);
+                            double matchEdgeWeight = 1.0/(1.0+Math.exp(theAgonRank.getComputedSkill(aPlayer)-theAgonRank.getComputedSkill(bPlayer)));
+                            computedEdgeOn.get(aPlayer).get(theGame).addValue(aPlayerScore-bPlayerScore, matchEdgeWeight);
                         }
                     }
                     
