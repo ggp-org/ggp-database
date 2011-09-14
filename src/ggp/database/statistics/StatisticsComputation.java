@@ -32,7 +32,7 @@ import com.google.appengine.repackaged.org.json.JSONException;
 import com.google.appengine.repackaged.org.json.JSONObject;
 
 public class StatisticsComputation {
-    public static final int STATS_VERSION = 9;
+    public static final int STATS_VERSION = 10;
 
     public static String getHostName(String matchHostPK) {
         if (matchHostPK.contains("0ca7065b86d7646166d86233f9e23ac47d8320d4")) return "SimpleGameSim";
@@ -271,6 +271,8 @@ public class StatisticsComputation {
             overall.put("netScore", netScores);
             overall.put("statsVersion", STATS_VERSION);
             overall.put("matchesStartedChart", matchesStarted.getTimeMap());
+            overall.put("observedPlayers", thePlayerNames);
+            overall.put("observedGames", theGameNames);
 
             // Store the per-player statistics
             for (String playerName : thePlayerNames) {
