@@ -28,24 +28,36 @@ public class MatchQuery {
                 return;
             }
             Query query = Persistence.getPersistenceManager().newQuery(CondensedMatch.class);
-            query.setFilter("hashedMatchHostPK == '" + theHost + "'");
+            if (!theHost.equals("all")) {
+              query.setFilter("hashedMatchHostPK == '" + theHost + "'");
+            }
             if (theVerb.equals("filterPlayer")) {
                 String thePlayer = theSplit[3];
                 if (thePlayer.length() == 0) {
                     resp.setStatus(404);
                     return;
                 }
-                query.setFilter("hashedMatchHostPK == '" + theHost + "' && playerNamesFromHost == '" + thePlayer + "'");
+                String theFilter = "playerNamesFromHost == '" + thePlayer + "' && hashedMatchHostPK == '" + theHost + "'";
+                if (theHost.equals("all")) throw new RuntimeException("Cross-host player filtering is not sane.");
+                query.setFilter(theFilter);
             } else if (theVerb.equals("filterGame")) {
                 String theGame = theSplit[3];
                 if (theGame.length() == 0) {
                     resp.setStatus(404);
                     return;
-                }                
-                query.setFilter("hashedMatchHostPK == '" + theHost + "' && gameMetaURL == '" + theGame + "'");
+                }
+                String theFilter = "gameMetaURL == '" + theGame + "'";
+                if (!theHost.equals("all")) {
+                    theFilter += " && hashedMatchHostPK == '" + theHost + "'";
+                }
+                query.setFilter(theFilter);
             } else if (theVerb.equals("filterActiveSet")) {
                 String sixHoursAgo = "" + (System.currentTimeMillis() - 21600000L);
-                query.setFilter("hashedMatchHostPK == '" + theHost + "' && isCompleted == false && startTime > " + sixHoursAgo);
+                String theFilter = "isCompleted == false && startTime > " + sixHoursAgo;
+                if (!theHost.equals("all")) {
+                    theFilter += " && hashedMatchHostPK == '" + theHost + "'";
+                }
+                query.setFilter(theFilter);
             } else if (!theVerb.equals("filter")) {
                 resp.setStatus(404);
                 return;
