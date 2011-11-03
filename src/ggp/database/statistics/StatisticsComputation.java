@@ -28,16 +28,18 @@ import com.google.appengine.api.datastore.PreparedQuery;
 import com.google.appengine.api.datastore.Query;
 import com.google.appengine.api.datastore.QueryResultIterator;
 import com.google.appengine.api.datastore.ReadPolicy;
+import com.google.appengine.repackaged.com.google.common.base.Pair;
 import com.google.appengine.repackaged.org.json.JSONException;
 import com.google.appengine.repackaged.org.json.JSONObject;
 
 public class StatisticsComputation {
-    public static final int STATS_VERSION = 10;
+    public static final int STATS_VERSION = 12;
 
     public static String getHostName(String matchHostPK) {
-        if (matchHostPK.contains("0ca7065b86d7646166d86233f9e23ac47d8320d4")) return "SimpleGameSim";
+        if (matchHostPK.contains("0ca7065b86d7646166d86233f9e23ac47d8320d4")) return "Sample";
         if (matchHostPK.contains("90bd08a7df7b8113a45f1e537c1853c3974006b2")) return "Apollo";
         if (matchHostPK.contains("f69721b2f73839e513eed991e96824f1af218ac1")) return "Dresden";
+        if (matchHostPK.contains("5bc94f8e793772e8585a444f2fc95d2ac087fed0")) return "Artemis";
         return matchHostPK;
     }
 
@@ -93,6 +95,7 @@ public class StatisticsComputation {
         
         // Save all of the statistics        
         for (String theLabel : statsForLabel.keySet()) {
+            statsForLabel.get(theLabel).finalStageComputation();
             statsForLabel.get(theLabel).saveAs(theLabel);
         }        
     }
@@ -114,6 +117,8 @@ public class StatisticsComputation {
     Map<String,WeightedAverage> gameAverageMoves = new HashMap<String,WeightedAverage>();
     Map<String,Map<String,Map<String,WinLossCounter>>> playerWinsVersusPlayerOnGame = new HashMap<String,Map<String,Map<String,WinLossCounter>>>();
     Map<String,Double> netScores = new HashMap<String,Double>();
+    Map<String,Map<Integer,Map<String,WeightedAverage>>> perGameRolePlayerAverageScore = new HashMap<String,Map<Integer,Map<String,WeightedAverage>>>();
+    Map<String,List<Double>> perGameRoleCorrelationWithSkill = new HashMap<String,List<Double>>();
 
     Set<String> theGameNames = new HashSet<String>();
     Set<String> thePlayerNames = new HashSet<String>();
@@ -179,6 +184,17 @@ public class StatisticsComputation {
                     }
                     playerAverageScore.get(aPlayer).addValue(aPlayerScore);
 
+                    if (!perGameRolePlayerAverageScore.containsKey(theGame)) {
+                        perGameRolePlayerAverageScore.put(theGame, new HashMap<Integer,Map<String,WeightedAverage>>());
+                    }
+                    if (!perGameRolePlayerAverageScore.get(theGame).containsKey(i)) {
+                        perGameRolePlayerAverageScore.get(theGame).put(i, new HashMap<String,WeightedAverage>());
+                    }
+                    if (!perGameRolePlayerAverageScore.get(theGame).get(i).containsKey(aPlayer)) {
+                        perGameRolePlayerAverageScore.get(theGame).get(i).put(aPlayer, new WeightedAverage());
+                    }
+                    perGameRolePlayerAverageScore.get(theGame).get(i).get(aPlayer).addValue(aPlayerScore);
+                    
                     double ageInDays = (double)(System.currentTimeMillis() - (Long)theMatch.getProperty("startTime")) / (double)(86400000L);
                     if (!playerDecayedAverageScore.containsKey(aPlayer)) {
                         playerDecayedAverageScore.put(aPlayer, new WeightedAverage());
@@ -243,6 +259,36 @@ public class StatisticsComputation {
         }        
     }
     
+    public void finalStageComputation() {
+        // Perform any computations that need to be done after adding all the games.
+        for (String aGame : perGameRolePlayerAverageScore.keySet()) {
+            perGameRoleCorrelationWithSkill.put(aGame, new ArrayList<Double>());            
+            for (int i = 0; i < perGameRolePlayerAverageScore.get(aGame).size(); i++) {
+                Map<String,WeightedAverage> thePlayerAverageScores = perGameRolePlayerAverageScore.get(aGame).get(i);
+                Set<Pair<Double,Double>> dataPoints = new HashSet<Pair<Double,Double>>();
+                WeightedAverage meanScore = new WeightedAverage();
+                WeightedAverage meanSkill = new WeightedAverage();
+                for (String aPlayer : thePlayerAverageScores.keySet()) {
+                    double theScore = thePlayerAverageScores.get(aPlayer).getWeightedAverage();
+                    double theSkill = theAgonRank.getSkills().get(aPlayer);
+                    dataPoints.add(new Pair<Double,Double>(theScore, theSkill));
+                    meanScore.addValue(theScore);
+                    meanSkill.addValue(theSkill);                    
+                }
+                double xBar = meanScore.getWeightedAverage();
+                double yBar = meanSkill.getWeightedAverage();
+                double A=0, B=0, C=0;
+                for (Pair<Double,Double> aPoint : dataPoints) {
+                    A += (aPoint.first - xBar)*(aPoint.second - yBar);
+                    B += (aPoint.first - xBar)*(aPoint.first - xBar);
+                    C += (aPoint.second - yBar)*(aPoint.second - yBar);
+                }
+                double theCorrelation = A/Math.sqrt(B*C);
+                perGameRoleCorrelationWithSkill.get(aGame).add(theCorrelation);
+            }
+        }
+    }
+    
     public void saveAs(String theLabel) {
         // Store the statistics as a JSON object in the datastore.
         try {
@@ -294,6 +340,8 @@ public class StatisticsComputation {
                 perGame.get(gameName).put("averageMoves", gameAverageMoves.get(gameName));
                 perGame.get(gameName).put("agonDifficulty", theAgonRank.getDifficulties().get(gameName));
                 perGame.get(gameName).put("agonScaledDifficulty", theAgonRank.getScaledDifficulties().get(gameName));
+                perGame.get(gameName).put("rolePlayerAverageScore", perGameRolePlayerAverageScore.get(gameName));
+                perGame.get(gameName).put("roleCorrelationWithSkill", perGameRoleCorrelationWithSkill.get(gameName));
             }
 
             FinalOverallStats.load(theLabel).setJSON(overall);
