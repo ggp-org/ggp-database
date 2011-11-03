@@ -205,6 +205,8 @@ public class CondensedMatch {
             theJSON.put("matchRoles", theJSON.getJSONArray("moves").getJSONArray(0).length());
         } else if (theJSON.has("errors") && theJSON.getJSONArray("errors").length() > 0) {
             theJSON.put("matchRoles", theJSON.getJSONArray("errors").getJSONArray(0).length());
+        } else if (theJSON.has("playerNamesFromHost") && theJSON.getJSONArray("playerNamesFromHost").length() > 0) {
+            theJSON.put("matchRoles", theJSON.getJSONArray("playerNamesFromHost").length());
         } else {
             // Whatever, don't set "matchRoles" yet, we won't use it anyway.
         }
