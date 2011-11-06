@@ -179,7 +179,9 @@ public class CondensedMatch {
            
            // per-role values
            theMatch.put("gameRoleNames", gameRoleNames);
-           theMatch.put("playerNamesFromHost", playerNamesFromHost);
+           if (playerNamesFromHost.size() > 0) {
+             theMatch.put("playerNamesFromHost", playerNamesFromHost);
+           }
            theMatch.put("allErrorsForPlayer", allErrorsForPlayer);
            theMatch.put("hasErrorsForPlayer", hasErrorsForPlayer);
            if (goalValues.size() > 0) {
