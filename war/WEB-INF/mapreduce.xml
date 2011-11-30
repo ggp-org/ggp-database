@@ -12,5 +12,19 @@
       <name human="Entity Kind to Map Over">mapreduce.mapper.inputformat.datastoreinputformat.entitykind</name>
       <value template="optional">CondensedMatch</value>
     </property>
-  </configuration> 
+  </configuration>
+  <configuration name="PurgeMapper">
+    <property>
+      <name>mapreduce.map.class</name>
+      <value>ggp.database.mapreduce.PurgeMapper</value>
+    </property>
+    <property>
+      <name>mapreduce.inputformat.class</name>
+      <value>com.google.appengine.tools.mapreduce.DatastoreInputFormat</value>
+    </property>
+    <property>
+      <name human="Entity Kind to Map Over">mapreduce.mapper.inputformat.datastoreinputformat.entitykind</name>
+      <value template="optional">CondensedMatch</value>
+    </property>
+  </configuration>  
 </configurations>
