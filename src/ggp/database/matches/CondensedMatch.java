@@ -180,7 +180,9 @@ public class CondensedMatch {
            theMatch.put("tournamentNameFromHost", tournamentNameFromHost);
            theMatch.put("scrambled", scrambled);
            theMatch.put("weight", weight);
-           theMatch.put("lastUpdated", lastUpdated.getTime());
+           if (lastUpdated != null) {
+             theMatch.put("lastUpdated", lastUpdated.getTime());
+           }
 
            // per-role values
            theMatch.put("gameRoleNames", gameRoleNames);
@@ -190,7 +192,7 @@ public class CondensedMatch {
            theMatch.put("allErrorsForPlayer", allErrorsForPlayer);
            theMatch.put("hasErrorsForPlayer", hasErrorsForPlayer);
            if (goalValues.size() > 0) {
-               theMatch.put("goalValues", goalValues);
+             theMatch.put("goalValues", goalValues);
            }           
 
            return theMatch;
