@@ -10,6 +10,7 @@ import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.Formatter;
 import java.util.HashSet;
 import java.util.List;
@@ -18,6 +19,7 @@ import java.util.Set;
 import javax.jdo.PersistenceManager;
 import javax.jdo.annotations.*;
 
+import util.crypto.BaseHashing;
 import util.crypto.SignableJSON;
 
 import com.google.appengine.api.channel.ChannelMessage;
@@ -51,6 +53,7 @@ public class CondensedMatch {
     @Persistent public String tournamentNameFromHost;
     @Persistent public Boolean scrambled;
     @Persistent public Double weight;
+    @Persistent public Date lastUpdated;
 
     @Persistent public List<String> playerNamesFromHost;
     @Persistent @Extension(vendorName = "datanucleus", key = "gae.unindexed", value="true") public List<Integer> goalValues;
@@ -95,6 +98,7 @@ public class CondensedMatch {
         if (theMatchJSON.has("matchHostPK")) {
             this.hashedMatchHostPK = theMatchJSON.getString("matchHostPK");
         }
+        this.lastUpdated = new Date();
         this.startClock = theMatchJSON.getInt("startClock");
         this.playClock = theMatchJSON.getInt("playClock");
         this.moveCount = theMatchJSON.getInt("moveCount");
@@ -144,7 +148,7 @@ public class CondensedMatch {
             this.hasErrorsForPlayer = convertToList(theMatchJSON.getJSONArray("hasErrorsForPlayer"));
         }
         
-        // When the match is compelted, we can phase out the channel registrations:
+        // When the match is completed, we can phase out the channel registrations:
         // move them from persistent storage to an in-memory variable, so that we can still
         // notify subscribers about the last update.
         if (isCompleted) {
@@ -176,7 +180,8 @@ public class CondensedMatch {
            theMatch.put("tournamentNameFromHost", tournamentNameFromHost);
            theMatch.put("scrambled", scrambled);
            theMatch.put("weight", weight);
-           
+           theMatch.put("lastUpdated", lastUpdated.getTime());
+
            // per-role values
            theMatch.put("gameRoleNames", gameRoleNames);
            if (playerNamesFromHost.size() > 0) {
@@ -187,7 +192,7 @@ public class CondensedMatch {
            if (goalValues.size() > 0) {
                theMatch.put("goalValues", goalValues);
            }           
-           
+
            return theMatch;
         } catch (JSONException e) {
             return null;
@@ -210,11 +215,11 @@ public class CondensedMatch {
         } else if (theJSON.has("playerNamesFromHost") && theJSON.getJSONArray("playerNamesFromHost").length() > 0) {
             theJSON.put("matchRoles", theJSON.getJSONArray("playerNamesFromHost").length());
         } else {
-            // Whatever, don't set "matchRoles" yet, we won't use it anyway.
+            // Whatever, don't set "matchRoles" yet.
         }
         theJSON.put("matchLength", theJSON.getJSONArray("stateTimes").getLong(theJSON.getJSONArray("stateTimes").length()-1)-theJSON.getJSONArray("stateTimes").getLong(0));
         if (theJSON.has("matchHostPK")) {
-          theJSON.put("matchHostPK", computeHash(theJSON.getString("matchHostPK")));
+          theJSON.put("matchHostPK", BaseHashing.computeSHA1Hash(theJSON.getString("matchHostPK")));
         }
         theJSON.remove("matchHostSignature");
         theJSON.remove("states");      // Strip out all of the large fields
@@ -351,28 +356,6 @@ public class CondensedMatch {
         CondensedMatch c = Persistence.loadSpecific(matchURL, CondensedMatch.class);
         if (c == null) return null;
         return c.getMatchJSON();
-    }
-
-    // Computes the SHA1 hash of a given input string, and represents
-    // that hash as a hexadecimal string.
-    private static String computeHash(String theData) {
-        try {
-            MessageDigest SHA1 = MessageDigest.getInstance("SHA1");
-
-            DigestInputStream theDigestStream = new DigestInputStream(
-                    new BufferedInputStream(new ByteArrayInputStream(
-                            theData.getBytes("UTF-8"))), SHA1);
-            while (theDigestStream.read() != -1);
-            byte[] theHash = SHA1.digest();
-
-            Formatter hexFormat = new Formatter();
-            for (byte x : theHash) {
-                hexFormat.format("%02x", x);
-            }
-            return hexFormat.toString();
-        } catch (Exception e) {
-            return null;
-        }
     }
 
     @SuppressWarnings("unchecked")
