@@ -261,7 +261,7 @@ public class GGP_DatabaseServlet extends HttpServlet {
             ss.addUpdate(theLink);
             ss.save();
             
-            QueueFactory.getDefaultQueue().add(withUrl("/tasks/ingest_match").method(Method.GET).param("matchURL", theLink).retryOptions(withTaskRetryLimit(2)));
+            QueueFactory.getDefaultQueue().add(withUrl("/tasks/ingest_match").method(Method.GET).param("matchURL", theLink).retryOptions(withTaskRetryLimit(6)));
 
             resp.setStatus(200);
             resp.getWriter().close();
