@@ -49,7 +49,6 @@ public class CondensedMatch {
     @Persistent public boolean allErrorsForSomePlayer;
     @Persistent public boolean isCompleted;
     @Persistent public String gameMetaURL;
-    @Persistent public String gameName; // TODO: remove this
     @Persistent public String tournamentNameFromHost;
     @Persistent public Boolean scrambled;
     @Persistent public Double weight;
@@ -57,7 +56,6 @@ public class CondensedMatch {
 
     @Persistent public List<String> playerNamesFromHost;
     @Persistent @Extension(vendorName = "datanucleus", key = "gae.unindexed", value="true") public List<Integer> goalValues;
-    @Persistent @Extension(vendorName = "datanucleus", key = "gae.unindexed", value="true") public List<String> gameRoleNames; // TODO: remove this
     @Persistent @Extension(vendorName = "datanucleus", key = "gae.unindexed", value="true") public List<Boolean> allErrorsForPlayer;
     @Persistent @Extension(vendorName = "datanucleus", key = "gae.unindexed", value="true") public List<Boolean> hasErrorsForPlayer;
 
@@ -117,9 +115,6 @@ public class CondensedMatch {
         }
         this.isCompleted = theMatchJSON.getBoolean("isCompleted");
         this.gameMetaURL = theMatchJSON.getString("gameMetaURL");
-        if (theMatchJSON.has("gameName")) {
-            this.gameName = theMatchJSON.getString("gameName");
-        }
         
         if (theMatchJSON.has("tournamentNameFromHost")) {
             this.tournamentNameFromHost = theMatchJSON.getString("tournamentNameFromHost");
@@ -134,9 +129,6 @@ public class CondensedMatch {
         // per-role values
         if (theMatchJSON.has("goalValues")) {
             this.goalValues = convertToList(theMatchJSON.getJSONArray("goalValues"));
-        }
-        if (theMatchJSON.has("gameRoleNames")) {
-            this.gameRoleNames = convertToList(theMatchJSON.getJSONArray("gameRoleNames"));
         }
         if (theMatchJSON.has("playerNamesFromHost")) {
             this.playerNamesFromHost = convertToList(theMatchJSON.getJSONArray("playerNamesFromHost"));
@@ -176,7 +168,6 @@ public class CondensedMatch {
            theMatch.put("allErrorsForSomePlayer", allErrorsForSomePlayer);
            theMatch.put("isCompleted", isCompleted);
            theMatch.put("gameMetaURL", gameMetaURL);
-           theMatch.put("gameName", gameName);
            theMatch.put("tournamentNameFromHost", tournamentNameFromHost);
            theMatch.put("scrambled", scrambled);
            theMatch.put("weight", weight);
@@ -185,7 +176,6 @@ public class CondensedMatch {
            }
 
            // per-role values
-           theMatch.put("gameRoleNames", gameRoleNames);
            if (playerNamesFromHost.size() > 0) {
              theMatch.put("playerNamesFromHost", playerNamesFromHost);
            }
