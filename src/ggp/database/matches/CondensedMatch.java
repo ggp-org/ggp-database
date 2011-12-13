@@ -325,7 +325,7 @@ public class CondensedMatch {
             }
             theMatchData.save();
             theMatchData.pingChannelClients();
-            if (!theMatchData.hashedMatchHostPK.isEmpty()) {
+            if (theMatchData.hashedMatchHostPK != null && !theMatchData.hashedMatchHostPK.isEmpty()) {
                 UpdateRegistry.pingClients("query/filter,recent," + theMatchData.hashedMatchHostPK);
                 UpdateRegistry.pingClients("query/filterGame,recent," + theMatchData.hashedMatchHostPK + "," + theMatchData.gameMetaURL);
                 if (changedActiveSet) {
