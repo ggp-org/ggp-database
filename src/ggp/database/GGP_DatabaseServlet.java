@@ -3,6 +3,7 @@ package ggp.database;
 import static com.google.appengine.api.taskqueue.RetryOptions.Builder.withTaskRetryLimit;
 import static com.google.appengine.api.taskqueue.TaskOptions.Builder.withUrl;
 
+import ggp.database.cron.UpdateOngoing;
 import ggp.database.matches.CondensedMatch;
 import ggp.database.notifications.ChannelService;
 import ggp.database.notifications.UpdateRegistry;
@@ -41,7 +42,8 @@ public class GGP_DatabaseServlet extends HttpServlet {
         resp.setHeader("Access-Control-Allow-Origin", "*");
         resp.setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
         resp.setHeader("Access-Control-Allow-Headers", "*");
-        resp.setHeader("Access-Control-Allow-Age", "86400");        
+        resp.setHeader("Access-Control-Allow-Age", "86400");
+        resp.setStatus(200);
         
         String reqURI = req.getRequestURI();
         if (reqURI.equals("/cron/push_subscribe") || reqURI.equals("/push_subscribe")) {
@@ -51,24 +53,24 @@ public class GGP_DatabaseServlet extends HttpServlet {
             String theCallbackURL = URLEncoder.encode("http://database.ggp.org/ingestion/", "UTF-8");
             String theFeedURL = URLEncoder.encode("http://matches.ggp.org/matches/feeds/updatedFeed.atom", "UTF-8");                                    
             RemoteResourceLoader.postRawWithTimeout("http://pubsubhubbub.appspot.com/", "hub.callback=" + theCallbackURL + "&hub.mode=subscribe&hub.topic=" + theFeedURL + "&hub.verify=sync&hub.verify_token=" + ss.getValidationToken(), 5000);
-            resp.setStatus(200);
             resp.getWriter().println("PuSH subscription sent.");            
             return;
         } else if (req.getRequestURI().equals("/cron/update_stats") || req.getRequestURI().equals("/update_stats")) {
             QueueFactory.getDefaultQueue().add(withUrl("/tasks/update_stats").method(Method.GET).retryOptions(withTaskRetryLimit(0)));
             //XXX: QueueFactory.getDefaultQueue().add(withUrl("/tasks/update_new_stats").method(Method.GET).retryOptions(withTaskRetryLimit(0)));
             return;
+        } else if (reqURI.equals("/cron/update_ongoing") || reqURI.equals("/update_ongoing")) {
+            UpdateOngoing.run();
+            return;
         } else if (req.getRequestURI().equals("/tasks/update_stats")) {
             if (isDatastoreWriteable()) {
                 StatisticsComputation.computeStatistics();
             }
-            resp.setStatus(200);
             return;
         } else if (req.getRequestURI().equals("/tasks/update_new_stats")) {
             if (isDatastoreWriteable()) {
                 NewStatisticsComputation.computeBatchStatistics();
             }
-            resp.setStatus(200);
             return;
         }     
         
@@ -79,7 +81,6 @@ public class GGP_DatabaseServlet extends HttpServlet {
             isValid &= req.getParameter("hub.topic").equals("http://matches.ggp.org/matches/feeds/updatedFeed.atom");
             isValid &= req.getParameter("hub.verify_token").equals(ss.getValidationToken());
             if (isValid) {
-                resp.setStatus(200);
                 resp.getWriter().print(req.getParameter("hub.challenge"));
                 resp.getWriter().close();
             } else {
@@ -92,7 +93,6 @@ public class GGP_DatabaseServlet extends HttpServlet {
             String theMatchURL = req.getParameter("matchURL");
             JSONObject theMatchJSON = RemoteResourceLoader.loadJSON(theMatchURL);
             CondensedMatch.storeCondensedMatchJSON(theMatchURL, theMatchJSON);
-            resp.setStatus(200);
             return;            
         }      
 
@@ -103,7 +103,6 @@ public class GGP_DatabaseServlet extends HttpServlet {
                 // If they're requesting a channel token, we can handle
                 // that immediately without needing further parsing.                
                 ChannelService.writeChannelToken(resp);
-                resp.setStatus(200);
                 return;
             } else if (theSub.startsWith("match/")) {
                 theSub = theSub.substring("match/".length());
@@ -113,7 +112,6 @@ public class GGP_DatabaseServlet extends HttpServlet {
                     String theID = theSub.substring(theSub.indexOf("/clientId=")+("/clientId=".length()));
                     String theKey = theSub.substring(0, theSub.indexOf("/clientId="))+"/";
                     ChannelService.registerChannelForMatch(resp, theKey, theID);
-                    resp.setStatus(200);
                     return;
                 }
             } else if (theSub.startsWith("query/")) {
@@ -125,7 +123,6 @@ public class GGP_DatabaseServlet extends HttpServlet {
                     if (UpdateRegistry.verifyKey(theKey)) {
                         UpdateRegistry.registerClient(theKey, theID);
                         resp.getWriter().println("Successfully subscribed to: " + theKey);
-                        resp.setStatus(200);
                         return;
                     }
                 }

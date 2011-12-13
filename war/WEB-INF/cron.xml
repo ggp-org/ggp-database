@@ -9,5 +9,10 @@
     <url>/cron/update_stats</url>
     <description>Update the server statistics every four hours.</description>
     <schedule>every 4 hours</schedule>
-  </cron>  
+  </cron>
+  <cron>
+    <url>/cron/update_ongoing</url>
+    <description>Update matches still listed as "ongoing" every hour.</description>
+    <schedule>every 1 hours</schedule>
+  </cron>
 </cronentries>
