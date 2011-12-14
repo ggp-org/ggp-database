@@ -11,8 +11,13 @@
     <schedule>every 4 hours</schedule>
   </cron>
   <cron>
-    <url>/cron/update_ongoing</url>
-    <description>Update matches still listed as "ongoing" every hour.</description>
-    <schedule>every 1 hours</schedule>
+    <url>/cron/update_recent_ongoing</url>
+    <description>Update recent matches still listed as "ongoing" every 15 minutes.</description>
+    <schedule>every 15 minutes</schedule>
   </cron>
+  <cron>
+    <url>/cron/update_all_ongoing</url>
+    <description>Update all matches still listed as "ongoing" every day.</description>
+    <schedule>every 24 hours</schedule>
+  </cron>  
 </cronentries>

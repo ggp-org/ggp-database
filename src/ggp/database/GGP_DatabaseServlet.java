@@ -59,8 +59,11 @@ public class GGP_DatabaseServlet extends HttpServlet {
             QueueFactory.getDefaultQueue().add(withUrl("/tasks/update_stats").method(Method.GET).retryOptions(withTaskRetryLimit(0)));
             //XXX: QueueFactory.getDefaultQueue().add(withUrl("/tasks/update_new_stats").method(Method.GET).retryOptions(withTaskRetryLimit(0)));
             return;
-        } else if (reqURI.equals("/cron/update_ongoing") || reqURI.equals("/update_ongoing")) {
-            UpdateOngoing.run();
+        } else if (reqURI.equals("/cron/update_all_ongoing") || reqURI.equals("/update_ongoing")) {
+            UpdateOngoing.updateAllOngoing();
+            return;
+        } else if (reqURI.equals("/cron/update_recent_ongoing")) {
+            UpdateOngoing.updateRecentOngoing();
             return;
         } else if (req.getRequestURI().equals("/tasks/update_stats")) {
             if (isDatastoreWriteable()) {

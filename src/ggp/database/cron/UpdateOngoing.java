@@ -14,10 +14,23 @@ import com.google.appengine.api.taskqueue.QueueFactory;
 import com.google.appengine.api.taskqueue.TaskOptions.Method;
 
 public class UpdateOngoing {
+    public static void updateAllOngoing() throws IOException {
+        updateOngoingSince(null);
+    }
+
+    public static void updateRecentOngoing() throws IOException {
+        String sixHoursAgo = "" + (System.currentTimeMillis() - 21600000L);
+        updateOngoingSince(sixHoursAgo);
+    }
+
     @SuppressWarnings("unchecked")
-    public static void run() throws IOException {
+    private static void updateOngoingSince(String sinceTime) throws IOException {
         Query query = Persistence.getPersistenceManager().newQuery(CondensedMatch.class);
-        query.setFilter("isCompleted == false");
+        if (sinceTime == null) {
+            query.setFilter("isCompleted == false");
+        } else {
+            query.setFilter("isCompleted == false && startTime > " + sinceTime);
+        }
 
         try {
             List<CondensedMatch> results = (List<CondensedMatch>) query.execute();
