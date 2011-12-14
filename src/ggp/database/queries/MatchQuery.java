@@ -19,9 +19,15 @@ public class MatchQuery {
         JSONObject theResponse = null;
         if (theRPC.startsWith("filter")) {
             String[] theSplit = theRPC.split(",");
-            String theVerb = theSplit[0];
-            String theDomain = theSplit[1];
-            String theHost = theSplit[2];
+            String theVerb, theDomain, theHost;
+            try {
+                theVerb = theSplit[0];
+                theDomain = theSplit[1];
+                theHost = theSplit[2];
+            } catch (ArrayIndexOutOfBoundsException e) {
+                resp.setStatus(404);
+                return;
+            }
             
             if (theVerb.length() == 0 || theDomain.length() == 0 || theHost.length() == 0) {
                 resp.setStatus(404);
