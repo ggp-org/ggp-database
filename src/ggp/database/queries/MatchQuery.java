@@ -34,7 +34,9 @@ public class MatchQuery {
                 return;
             }
             Query query = Persistence.getPersistenceManager().newQuery(CondensedMatch.class);
-            if (!theHost.equals("all")) {
+            if (theHost.equals("unsigned")) {
+              query.setFilter("hashedMatchHostPK == null");
+            } else if (!theHost.equals("all")) {
               query.setFilter("hashedMatchHostPK == '" + theHost + "'");
             }
             if (theVerb.equals("filterPlayer")) {
@@ -45,6 +47,7 @@ public class MatchQuery {
                 }
                 String theFilter = "playerNamesFromHost == '" + thePlayer + "' && hashedMatchHostPK == '" + theHost + "'";
                 if (theHost.equals("all")) throw new RuntimeException("Cross-host player filtering is not sane.");
+                if (theHost.equals("unsigned")) throw new RuntimeException("Unsigned player filtering is not sane.");
                 query.setFilter(theFilter);
             } else if (theVerb.equals("filterGame")) {
                 String theGame = theSplit[3];
@@ -53,14 +56,18 @@ public class MatchQuery {
                     return;
                 }
                 String theFilter = "gameMetaURL == '" + theGame + "'";
-                if (!theHost.equals("all")) {
+                if (theHost.equals("unsigned")) {
+                    theFilter += " && hashedMatchHostPK == null";
+                } else if (!theHost.equals("all")) {
                     theFilter += " && hashedMatchHostPK == '" + theHost + "'";
                 }
                 query.setFilter(theFilter);
             } else if (theVerb.equals("filterActiveSet")) {
                 String sixHoursAgo = "" + (System.currentTimeMillis() - 21600000L);
                 String theFilter = "isCompleted == false && startTime > " + sixHoursAgo;
-                if (!theHost.equals("all")) {
+                if (theHost.equals("unsigned")) {
+                    theFilter += " && hashedMatchHostPK == null";
+                } else if (!theHost.equals("all")) {
                     theFilter += " && hashedMatchHostPK == '" + theHost + "'";
                 }
                 query.setFilter(theFilter);
