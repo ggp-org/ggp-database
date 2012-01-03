@@ -33,7 +33,7 @@ import com.google.appengine.repackaged.org.json.JSONException;
 import com.google.appengine.repackaged.org.json.JSONObject;
 
 public class StatisticsComputation {
-    public static final int STATS_VERSION = 12;
+    public static final int STATS_VERSION = 15;
 
     public static String getHostName(String matchHostPK) {
         if (matchHostPK.contains("0ca7065b86d7646166d86233f9e23ac47d8320d4")) return "Sample";
@@ -313,7 +313,9 @@ public class StatisticsComputation {
             overall.put("matchesPerDayMedian", matchesPerDay.getMedianPerDay());
             overall.put("eloRank", theEloRank.getComputedRanks());
             overall.put("agonSkill", theAgonRank.getSkills());
+            overall.put("agonScaledSkill", theAgonRank.getScaledSkills());
             overall.put("agonDifficulty", theAgonRank.getDifficulties());
+            overall.put("agonScaledDifficulty", theAgonRank.getScaledDifficulties());
             overall.put("netScore", netScores);
             overall.put("statsVersion", STATS_VERSION);
             overall.put("matchesStartedChart", matchesStarted.getTimeMap());
