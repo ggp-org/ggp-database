@@ -7,13 +7,13 @@
   </cron>
   <cron>
     <url>/cron/update_stats</url>
-    <description>Update the server statistics every four hours.</description>
-    <schedule>every 4 hours</schedule>
+    <description>Update the server statistics every eight hours.</description>
+    <schedule>every 8 hours</schedule>
   </cron>
   <cron>
     <url>/cron/update_recent_ongoing</url>
-    <description>Update recent matches still listed as "ongoing" every 15 minutes.</description>
-    <schedule>every 15 minutes</schedule>
+    <description>Update recent matches still listed as "ongoing" every half hour.</description>
+    <schedule>every 30 minutes</schedule>
   </cron>
   <cron>
     <url>/cron/update_all_ongoing</url>
