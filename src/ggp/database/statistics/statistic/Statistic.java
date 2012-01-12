@@ -1,5 +1,6 @@
 package ggp.database.statistics.statistic;
 
+import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.repackaged.org.json.JSONException;
 import com.google.appengine.repackaged.org.json.JSONObject;
 
@@ -9,14 +10,21 @@ public abstract class Statistic {
     public Statistic () {
         state = new JSONObject();
     }
-
-    public abstract void updateWithMatch(JSONObject newMatch) throws JSONException;
     
-    public abstract Object getFinalForm() throws JSONException;
-    public abstract Object getPerGameFinalForm(String forGame) throws JSONException;
-    public abstract Object getPerPlayerFinalForm(String forPlayer) throws JSONException;
+    public interface Reader {
+        public <T extends Statistic> T getStatistic(Class<T> c);
+    }
 
-    public void saveState(JSONObject toBeSerialized) {
+    // OVERRIDE: for updating the stats
+    public void updateWithMatch(Entity newMatch) {};
+    public void finalizeComputation(Reader theReader) {};
+    
+    // OVERRIDE: for returning the final stats
+    public Object getFinalForm() throws JSONException { return null; }
+    public Object getPerGameFinalForm(String forGame) throws JSONException { return null; }
+    public Object getPerPlayerFinalForm(String forPlayer) throws JSONException { return null; }
+    
+    public final void saveState(JSONObject toBeSerialized) {
         try {
             toBeSerialized.put(getClass().getSimpleName(), getState());
         } catch (JSONException e) {
@@ -24,7 +32,7 @@ public abstract class Statistic {
         }
     }
 
-    public void loadState(JSONObject serializedForm) {
+    public final void loadState(JSONObject serializedForm) {
         try {
             state = serializedForm.getJSONObject(getClass().getSimpleName());
         } catch (JSONException e) {
@@ -32,30 +40,42 @@ public abstract class Statistic {
         }
     }
 
-    protected void setStateVariable(String varName, double toValue) {
+    protected final double getStateVariable(String varName) {
+        return getVariable(getState(), varName);
+    }
+    
+    protected final void setStateVariable(String varName, double toValue) {
         setVariable(getState(), varName, toValue);
     }    
     
-    protected void incrementStateVariable(String varName, double byValue) {
+    protected final void incrementStateVariable(String varName, double byValue) {
         incrementVariable(getState(), varName, byValue);
     }
     
-    protected JSONObject getState() {
+    protected final JSONObject getState() {
         return state;
     }
 
-    protected static void setVariable(JSONObject state, String varName, double toValue) {
+    protected static final double getVariable(JSONObject state, String varName) {
+        try {
+            return state.getDouble(varName);
+        } catch (JSONException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    
+    protected static final void setVariable(JSONObject state, String varName, double toValue) {
         try {
             state.put(varName, toValue);
         } catch (JSONException e) {
             throw new RuntimeException(e);
         }
-    }    
+    }
     
-    protected static void incrementVariable(JSONObject state, String varName, double byValue) {
+    protected static final void incrementVariable(JSONObject state, String varName, double byValue) {
         try {
             double value = byValue;
-            if (!state.has(varName)) {
+            if (state.has(varName)) {
                 value += state.getDouble(varName);
             }
             state.put(varName, value);

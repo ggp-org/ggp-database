@@ -2,11 +2,11 @@ package ggp.database.statistics.statistic.implementation;
 
 import ggp.database.statistics.statistic.WeightedAverageStatistic;
 
-import com.google.appengine.repackaged.org.json.JSONException;
-import com.google.appengine.repackaged.org.json.JSONObject;
+import com.google.appengine.api.datastore.Entity;
 
 public class AverageMovesPerMatch extends WeightedAverageStatistic {
-    public void updateWithMatch(JSONObject newMatch) throws JSONException {
-        addEntry(newMatch.getJSONArray("moves").length(), 1.0);
+    public void updateWithMatch(Entity newMatch) {
+        if (newMatch.getProperty("moveCount") == null) return;
+        addEntry((Long)newMatch.getProperty("moveCount"), 1.0);
     }
 }

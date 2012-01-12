@@ -1,7 +1,7 @@
 package ggp.database.statistics.statistic;
 
+import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.repackaged.org.json.JSONException;
-import com.google.appengine.repackaged.org.json.JSONObject;
 
 public abstract class CounterStatistic extends Statistic {
     public CounterStatistic () {
@@ -23,5 +23,6 @@ public abstract class CounterStatistic extends Statistic {
     public Object getPerGameFinalForm(String forGame) { return null; }
     public Object getPerPlayerFinalForm(String forPlayer) { return null; }
     
-    public abstract void updateWithMatch(JSONObject newMatch) throws JSONException;    
+    @Override
+    public abstract void updateWithMatch(Entity newMatch);    
 }

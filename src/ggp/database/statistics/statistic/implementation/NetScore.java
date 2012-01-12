@@ -1,42 +1,35 @@
 package ggp.database.statistics.statistic.implementation;
 
-import ggp.database.statistics.statistic.PerEntityStatistic;
+import ggp.database.statistics.statistic.PerPlayerStatistic;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
+import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.repackaged.org.json.JSONException;
-import com.google.appengine.repackaged.org.json.JSONObject;
 
-public class NetScore extends PerEntityStatistic {
-    public void updateWithMatch(JSONObject newMatch) throws JSONException {
+public class NetScore extends PerPlayerStatistic {
+    @SuppressWarnings("unchecked")
+    public void updateWithMatch(Entity newMatch) {
+        if (newMatch.getProperty("goalValues") == null) return;        
+        if (!(Boolean)newMatch.getProperty("isCompleted")) return;
+        if (newMatch.getProperty("hashedMatchHostPK") == null) return;
+        if ((Boolean)newMatch.getProperty("hasErrors")) return;
+
         List<String> playerNames = getPlayerNames(newMatch);
         if (playerNames == null) return;
         
         for (int i = 0; i < playerNames.size(); i++) {
-            incrementPerPlayerVariable(playerNames.get(i), "netScore", newMatch.getJSONArray("goalValues").getInt(i));
+            double theScore = ((List<Long>)newMatch.getProperty("goalValues")).get(i);
+            incrementPerPlayerVariable(playerNames.get(i), "netScore", (theScore-50.0)/50.0);
         }
     }
 
     @Override
-    public Object getFinalForm() throws JSONException {
-        // TODO: refactor this so it's done at the PerPlayerStatistic level
-        Map<String,Integer> netScores = new HashMap<String,Integer>();
-        for (String playerName : getKnownPlayerNames()) {
-            netScores.put(playerName, getPerPlayerState(playerName).getInt("netScore"));
+    public Object getPerPlayerFinalForm(String forPlayer) {
+        try {
+            return getPerPlayerState(forPlayer).getDouble("netScore");
+        } catch (JSONException e) {
+            return null;
         }
-        return netScores;
-    }
-
-    @Override
-    public Object getPerGameFinalForm(String forGame) throws JSONException {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public Object getPerPlayerFinalForm(String forPlayer) throws JSONException {
-        return getPerPlayerState(forPlayer).getInt("netScore");
     }
 }
