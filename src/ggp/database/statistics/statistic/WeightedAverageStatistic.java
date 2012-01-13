@@ -24,8 +24,6 @@ public abstract class WeightedAverageStatistic extends Statistic {
         theFinalForm.put(getState().getDouble("totalEntries"));
         return theFinalForm;
     }
-    public Object getPerGameFinalForm(String forGame) { return null; }
-    public Object getPerPlayerFinalForm(String forPlayer) { return null; }
 
     @Override
     public abstract void updateWithMatch(Entity newMatch);    

@@ -16,13 +16,15 @@ public abstract class Statistic {
     }
 
     // OVERRIDE: for updating the stats
-    public void updateWithMatch(Entity newMatch) {};
+    public abstract void updateWithMatch(Entity newMatch);
     public void finalizeComputation(Reader theReader) {};
     
     // OVERRIDE: for returning the final stats
-    public Object getFinalForm() throws JSONException { return null; }
+    public abstract Object getFinalForm() throws JSONException;
     public Object getPerGameFinalForm(String forGame) throws JSONException { return null; }
     public Object getPerPlayerFinalForm(String forPlayer) throws JSONException { return null; }
+    
+    // ==== Utility functions ====
     
     public final void saveState(JSONObject toBeSerialized) {
         try {
@@ -60,7 +62,7 @@ public abstract class Statistic {
         try {
             return state.getDouble(varName);
         } catch (JSONException e) {
-            throw new RuntimeException(e);
+            return 0;
         }
     }
     

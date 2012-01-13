@@ -20,8 +20,6 @@ public abstract class CounterStatistic extends Statistic {
     public Object getFinalForm() throws JSONException {
         return getState().getDouble("value");
     }
-    public Object getPerGameFinalForm(String forGame) { return null; }
-    public Object getPerPlayerFinalForm(String forPlayer) { return null; }
     
     @Override
     public abstract void updateWithMatch(Entity newMatch);    
