@@ -1,59 +1,61 @@
 package ggp.database.statistics.statistic;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 
+import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.repackaged.org.json.JSONException;
 import com.google.appengine.repackaged.org.json.JSONObject;
 
-public abstract class PerGameStatistic extends Statistic {
+public abstract class PerGameStatistic<T extends Statistic> extends Statistic {
     private static final String gamePrefix = "game_";
     
-    private JSONObject getPerEntityState(String thePrefix, String theName) {
+    Map<String, T> cachedGameStats = new HashMap<String, T>();
+    protected T getPerGameStatistic(String gameName) {
         try {
-            if(!getState().has(thePrefix + theName)) {                
-                getState().put(thePrefix + theName, new JSONObject());
+            if (cachedGameStats.containsKey(gameName)) {
+                return cachedGameStats.get(gameName);
+            } else {
+                T aStat = getInitialStatistic();
+                getState().put(gamePrefix + gameName, aStat.getState());
+                cachedGameStats.put(gameName, aStat);
+                return aStat;
             }
-            return getState().getJSONObject(thePrefix + theName);
         } catch (JSONException e) {
             throw new RuntimeException(e);
         }
     }
     
-    protected JSONObject getPerGameState(String gameName) {
-        return getPerEntityState(gamePrefix, gameName);
-    }    
-    
-    protected void setPerGameVariable(String gameName, String varName, double toValue) {
-        setVariable(getPerGameState(gameName), varName, toValue);
-    }
-    
-    protected void incrementPerGameVariable(String gameName, String varName, double byValue) {
-        incrementVariable(getPerGameState(gameName), varName, byValue);
-    }
-    
-    public final Object getFinalForm() throws JSONException {
+    @Override
+    protected final Object getFinalForm() throws JSONException {
         JSONObject theFinalForm = new JSONObject();
         for (String gameName : getKnownGameNames()) {
-            theFinalForm.put(gameName, getPerGameFinalForm(gameName));
+            theFinalForm.put(gameName, getPerGameStatistic(gameName).getFinalForm());
         }
         return theFinalForm;
     }
     
+    @Override
+    protected final Object getPerGameFinalForm(String forGame) throws JSONException {
+        return getPerGameStatistic(forGame).getFinalForm();
+    }
+
     @SuppressWarnings("unchecked")
     protected Set<String> getKnownGameNames() {
-        Set<String> theKnownPlayers = new HashSet<String>();
+        Set<String> theKnownGames = new HashSet<String>();
         Iterator<String> i = getState().keys();
         while(i.hasNext()) {
             String theKey = i.next();
             if (theKey.startsWith(gamePrefix)) {
-                theKnownPlayers.add(theKey.replaceFirst(gamePrefix, ""));
+                theKnownGames.add(theKey.replaceFirst(gamePrefix, ""));
             }
         }
-        return theKnownPlayers;
+        return theKnownGames;
     }
 
-    public abstract void updateWithMatch(JSONObject newMatch) throws JSONException;
-    public abstract Object getPerGameFinalForm(String forGame) throws JSONException;
+    public abstract void updateWithMatch(Entity newMatch);
+    protected abstract T getInitialStatistic();    
 }

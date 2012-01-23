@@ -1,11 +1,9 @@
 package ggp.database.statistics.statistic;
 
 import com.google.appengine.api.datastore.Entity;
-import com.google.appengine.repackaged.org.json.JSONException;
 
 public abstract class CounterStatistic extends Statistic {
-    public CounterStatistic () {
-        super();
+    public CounterStatistic() {
         setStateVariable("value", 0.0);
     }
     
@@ -17,10 +15,20 @@ public abstract class CounterStatistic extends Statistic {
         incrementStateVariable("value", byValue);
     }
     
-    public Object getFinalForm() throws JSONException {
-        return getState().getDouble("value");
+    protected double getValue() {
+        return getStateVariable("value");
+    }
+    
+    public Object getFinalForm() {
+        return getValue();
     }
     
     @Override
-    public abstract void updateWithMatch(Entity newMatch);    
+    public abstract void updateWithMatch(Entity newMatch);
+    
+    public static class NaiveCounter extends CounterStatistic {
+        public void updateWithMatch(Entity newMatch) {};
+        public void incrementCounter(double byValue) { super.incrementCounter(byValue); }
+        public double getValue() { return super.getValue(); }
+    }
 }

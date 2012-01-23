@@ -2,9 +2,14 @@ package ggp.database.statistics;
 
 import static com.google.appengine.api.datastore.FetchOptions.Builder.withChunkSize;
 import ggp.database.statistics.statistic.Statistic;
+import ggp.database.statistics.statistic.implementation.AgonRank;
+import ggp.database.statistics.statistic.implementation.AverageMoves;
 import ggp.database.statistics.statistic.implementation.ComputeRAM;
 import ggp.database.statistics.statistic.implementation.ComputeTime;
 import ggp.database.statistics.statistic.implementation.ComputedAt;
+import ggp.database.statistics.statistic.implementation.DecayedAverageScore;
+import ggp.database.statistics.statistic.implementation.EloRank;
+import ggp.database.statistics.statistic.implementation.AverageScore;
 import ggp.database.statistics.statistic.implementation.Matches;
 import ggp.database.statistics.statistic.implementation.MatchesAbandoned;
 import ggp.database.statistics.statistic.implementation.MatchesAverageMoves;
@@ -39,18 +44,21 @@ import com.google.appengine.repackaged.org.json.JSONException;
 import com.google.appengine.repackaged.org.json.JSONObject;
 
 /*
- * Still need to convert:
- *   leaderboard
- *   decayedLeaderboard
+ * Still need to convert, for overall:
  *   matchesInPastHour
  *   matchesInPastDay
  *   matchesPerDayMedian
- *   eloRank
- *   agonSkill
- *   agonScaledSkill
- *   agonDifficulty
- *   agonScaledDifficulty
  *   matchesStartedChart
+ *   
+ * Still need to convert, per player:
+ *   computedEdgeOn
+ *   averageScoreOn
+ *   averageScoreVersus
+ *   winsVersusPlayerOnGame
+ *   
+ * Still need to convert, per game:
+ *   rolePlayerAverageScore
+ *   roleCorrelationWithSkill
 */
 
 public class NewStatisticsComputation implements Statistic.Reader {
@@ -148,9 +156,14 @@ public class NewStatisticsComputation implements Statistic.Reader {
         for (Statistic aStat : ServiceLoader.load(Statistic.class)) {
             registeredStatistics.add(aStat);
         }*/
+        registeredStatistics.add(new AgonRank());
+        registeredStatistics.add(new AverageMoves());
+        registeredStatistics.add(new AverageScore());
         registeredStatistics.add(new ComputedAt());
         registeredStatistics.add(new ComputeRAM());
         registeredStatistics.add(new ComputeTime());
+        registeredStatistics.add(new DecayedAverageScore());
+        registeredStatistics.add(new EloRank());
         registeredStatistics.add(new Matches());
         registeredStatistics.add(new MatchesAbandoned());
         registeredStatistics.add(new MatchesAverageMoves());
@@ -205,7 +218,11 @@ public class NewStatisticsComputation implements Statistic.Reader {
             // Store the overall statistics
             JSONObject overallStats = new JSONObject();
             for (Statistic s : registeredStatistics) {
-                overallStats.put(camelCase(s.getClass().getSimpleName()), s.getFinalForm());                
+                for (Statistic.FinalForm f : s.getFinalForms()) {
+                    if (f.value != null) {
+                        overallStats.put(f.name, f.value);
+                    }
+                }
             }
             FinalOverallStats.load("x_" + theLabel).setJSON(overallStats);
 
@@ -213,7 +230,11 @@ public class NewStatisticsComputation implements Statistic.Reader {
             for (String gameName : getStatistic(ObservedGames.class).getGames()) {
                 JSONObject gameStats = new JSONObject();
                 for (Statistic s : registeredStatistics) {
-                    gameStats.put(camelCase(s.getClass().getSimpleName()), s.getPerPlayerFinalForm(gameName));
+                    for (Statistic.FinalForm f : s.getPerGameFinalForms(gameName)) {
+                        if (f.value != null) {
+                            gameStats.put(f.name, f.value);
+                        }
+                    }
                 }
                 FinalGameStats.load("x_" + theLabel, gameName).setJSON(gameStats);
             }
@@ -222,16 +243,16 @@ public class NewStatisticsComputation implements Statistic.Reader {
             for (String playerName : getStatistic(ObservedPlayers.class).getPlayers()) {
                 JSONObject playerStats = new JSONObject();
                 for (Statistic s : registeredStatistics) {
-                    playerStats.put(camelCase(s.getClass().getSimpleName()), s.getPerPlayerFinalForm(playerName));
+                    for (Statistic.FinalForm f : s.getPerPlayerFinalForms(playerName)) {
+                        if (f.value != null) {
+                            playerStats.put(f.name, f.value);
+                        }
+                    }
                 }
                 FinalPlayerStats.load("x_" + theLabel, playerName).setJSON(playerStats);
             }
         } catch (JSONException e) {
             throw new RuntimeException(e);
         }        
-    }
-    
-    public static String camelCase(String x) {
-        return x.substring(0,1).toLowerCase() + x.substring(1);
     }
 }

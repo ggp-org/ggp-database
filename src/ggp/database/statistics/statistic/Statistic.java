@@ -1,5 +1,9 @@
 package ggp.database.statistics.statistic;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
 import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.repackaged.org.json.JSONException;
 import com.google.appengine.repackaged.org.json.JSONObject;
@@ -11,21 +15,39 @@ public abstract class Statistic {
         state = new JSONObject();
     }
     
-    public interface Reader {
+    public void setState(JSONObject x) {
+        state = x;
+    }
+    
+    public static interface Reader {
         public <T extends Statistic> T getStatistic(Class<T> c);
+    }
+    
+    public static class FinalForm {
+        public String name;
+        public Object value;
+        public FinalForm(String name, Object value) {
+            this.name = name;
+            this.value = value;
+        }
     }
 
     // OVERRIDE: for updating the stats
     public abstract void updateWithMatch(Entity newMatch);
     public void finalizeComputation(Reader theReader) {};
-    
+
     // OVERRIDE: for returning the final stats
-    public abstract Object getFinalForm() throws JSONException;
-    public Object getPerGameFinalForm(String forGame) throws JSONException { return null; }
-    public Object getPerPlayerFinalForm(String forPlayer) throws JSONException { return null; }
+    protected abstract Object getFinalForm() throws JSONException;
+    protected Object getPerGameFinalForm(String forGame) throws JSONException { return null; }
+    protected Object getPerPlayerFinalForm(String forPlayer) throws JSONException { return null; }    
+
+    // OVERRIDE only if you need to return multiple forms for a single statistic
+    public Set<FinalForm> getFinalForms() throws JSONException { return new HashSet<FinalForm>(Arrays.asList(new FinalForm[] {new FinalForm(camelCase(getClass().getSimpleName()), getFinalForm())})); }
+    public Set<FinalForm> getPerGameFinalForms(String forGame) throws JSONException { return new HashSet<FinalForm>(Arrays.asList(new FinalForm[] {new FinalForm(camelCase(getClass().getSimpleName()), getPerGameFinalForm(forGame))})); }
+    public Set<FinalForm> getPerPlayerFinalForms(String forPlayer) throws JSONException { return new HashSet<FinalForm>(Arrays.asList(new FinalForm[] {new FinalForm(camelCase(getClass().getSimpleName()), getPerPlayerFinalForm(forPlayer))})); }
     
     // ==== Utility functions ====
-    
+
     public final void saveState(JSONObject toBeSerialized) {
         try {
             toBeSerialized.put(getClass().getSimpleName(), getState());
@@ -38,7 +60,7 @@ public abstract class Statistic {
         try {
             state = serializedForm.getJSONObject(getClass().getSimpleName());
         } catch (JSONException e) {
-            throw new RuntimeException(e);
+            ;
         }
     }
 
@@ -85,4 +107,8 @@ public abstract class Statistic {
             throw new RuntimeException(e);
         }
     }
+    
+    public static String camelCase(String x) {
+        return x.substring(0,1).toLowerCase() + x.substring(1);
+    }    
 }

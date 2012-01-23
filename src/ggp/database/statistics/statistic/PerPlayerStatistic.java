@@ -1,48 +1,49 @@
 package ggp.database.statistics.statistic;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.repackaged.org.json.JSONException;
 import com.google.appengine.repackaged.org.json.JSONObject;
 
-public abstract class PerPlayerStatistic extends Statistic {
+public abstract class PerPlayerStatistic<T extends Statistic> extends Statistic {
     private static final String playerPrefix = "player_";
     
-    private JSONObject getPerEntityState(String thePrefix, String theName) {
+    Map<String, T> cachedPlayerStats = new HashMap<String, T>();
+    protected T getPerPlayerStatistic(String playerName) {
         try {
-            if(!getState().has(thePrefix + theName)) {                
-                getState().put(thePrefix + theName, new JSONObject());
+            if (cachedPlayerStats.containsKey(playerName)) {
+                return cachedPlayerStats.get(playerName);
+            } else {
+                T aStat = getInitialStatistic();
+                getState().put(playerPrefix + playerName, aStat.getState());
+                cachedPlayerStats.put(playerName, aStat);
+                return aStat;
             }
-            return getState().getJSONObject(thePrefix + theName);
         } catch (JSONException e) {
             throw new RuntimeException(e);
         }
     }
     
-    protected JSONObject getPerPlayerState(String playerName) {
-        return getPerEntityState(playerPrefix, playerName);
-    }
-    
-    protected void setPerPlayerVariable(String playerName, String varName, double toValue) {
-        setVariable(getPerPlayerState(playerName), varName, toValue);
-    }
-    
-    protected void incrementPerPlayerVariable(String playerName, String varName, double byValue) {
-        incrementVariable(getPerPlayerState(playerName), varName, byValue);
-    }
-    
-    public final Object getFinalForm() throws JSONException {
+    @Override
+    protected final Object getFinalForm() throws JSONException {
         JSONObject theFinalForm = new JSONObject();
         for (String playerName : getKnownPlayerNames()) {
-            theFinalForm.put(playerName, getPerPlayerFinalForm(playerName));
+            theFinalForm.put(playerName, getPerPlayerStatistic(playerName).getFinalForm());
         }
         return theFinalForm;
-    }    
+    }
+    
+    @Override
+    protected final Object getPerPlayerFinalForm(String forPlayer) throws JSONException {
+        return getPerPlayerStatistic(forPlayer).getFinalForm();
+    }
 
     @SuppressWarnings("unchecked")
     protected Set<String> getKnownPlayerNames() {
@@ -56,7 +57,7 @@ public abstract class PerPlayerStatistic extends Statistic {
         }
         return theKnownPlayers;
     }
-    
+
     @SuppressWarnings("unchecked")
     public static List<String> getPlayerNames(Entity newMatch) {
         List<String> playerNames = new ArrayList<String>();
@@ -69,6 +70,6 @@ public abstract class PerPlayerStatistic extends Statistic {
         return playerNames;
     }
     
-    public abstract void updateWithMatch(Entity newMatch);    
-    public abstract Object getPerPlayerFinalForm(String forPlayer) throws JSONException;
+    public abstract void updateWithMatch(Entity newMatch);
+    protected abstract T getInitialStatistic();    
 }
