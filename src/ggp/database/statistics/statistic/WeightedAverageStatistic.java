@@ -16,14 +16,22 @@ public abstract class WeightedAverageStatistic extends Statistic {
         incrementStateVariable("totalWeight", weight);
         incrementStateVariable("totalEntries", 1.0);
     }
+    
+    public double getWeightedAverage() {
+        try {
+            if (getState().getDouble("totalWeight") != 0) {
+                return getState().getDouble("totalValue") / getState().getDouble("totalWeight");
+            } else {
+                return 0;
+            }
+        } catch (JSONException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     public Object getFinalForm() throws JSONException {
         JSONArray theFinalForm = new JSONArray();
-        if (getState().getDouble("totalWeight") != 0) {
-            theFinalForm.put(getState().getDouble("totalValue") / getState().getDouble("totalWeight"));
-        } else {
-            theFinalForm.put(0);
-        }
+        theFinalForm.put(getWeightedAverage());
         theFinalForm.put(getState().getDouble("totalEntries"));
         return theFinalForm;
     }

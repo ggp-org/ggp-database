@@ -1,21 +1,21 @@
 package ggp.database.statistics.statistic.implementation;
 
-import ggp.database.statistics.statistic.CounterStatistic;
 import ggp.database.statistics.statistic.PerGameStatistic;
+import ggp.database.statistics.statistic.WeightedAverageStatistic;
 
 import com.google.appengine.api.datastore.Entity;
 
-public class AverageMoves extends PerGameStatistic<CounterStatistic.NaiveCounter> {
+public class AverageMoves extends PerGameStatistic<WeightedAverageStatistic.NaiveWeightedAverage> {
     public void updateWithMatch(Entity newMatch) {
         if (!(Boolean)newMatch.getProperty("isCompleted")) return;
 
         String theGameURL = newMatch.getProperty("gameMetaURL").toString();
         Long nMoves = (Long)newMatch.getProperty("moveCount");
-        getPerGameStatistic(theGameURL).incrementCounter(nMoves);
+        getPerGameStatistic(theGameURL).addEntry(nMoves, 1.0);
     }
 
     @Override
-    protected CounterStatistic.NaiveCounter getInitialStatistic() {
-        return new CounterStatistic.NaiveCounter();
+    protected WeightedAverageStatistic.NaiveWeightedAverage getInitialStatistic() {
+        return new WeightedAverageStatistic.NaiveWeightedAverage();
     }
 }

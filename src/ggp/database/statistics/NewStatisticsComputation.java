@@ -4,6 +4,8 @@ import static com.google.appengine.api.datastore.FetchOptions.Builder.withChunkS
 import ggp.database.statistics.statistic.Statistic;
 import ggp.database.statistics.statistic.implementation.AgonRank;
 import ggp.database.statistics.statistic.implementation.AverageMoves;
+import ggp.database.statistics.statistic.implementation.AverageScoreOn;
+import ggp.database.statistics.statistic.implementation.AverageScoreVersus;
 import ggp.database.statistics.statistic.implementation.ComputeRAM;
 import ggp.database.statistics.statistic.implementation.ComputeTime;
 import ggp.database.statistics.statistic.implementation.ComputedAt;
@@ -15,14 +17,19 @@ import ggp.database.statistics.statistic.implementation.MatchesAbandoned;
 import ggp.database.statistics.statistic.implementation.MatchesAverageMoves;
 import ggp.database.statistics.statistic.implementation.MatchesAveragePlayers;
 import ggp.database.statistics.statistic.implementation.MatchesFinished;
+import ggp.database.statistics.statistic.implementation.MatchesStartedChart;
 import ggp.database.statistics.statistic.implementation.MatchesStatErrors;
 import ggp.database.statistics.statistic.implementation.NetScore;
 import ggp.database.statistics.statistic.implementation.ObservedGames;
 import ggp.database.statistics.statistic.implementation.ObservedPlayers;
+import ggp.database.statistics.statistic.implementation.RoleCorrelationWithSkill;
+import ggp.database.statistics.statistic.implementation.RolePlayerAverageScore;
 import ggp.database.statistics.statistic.implementation.StatsVersion;
+import ggp.database.statistics.statistic.implementation.WinsVersusPlayerOnGame;
 import ggp.database.statistics.stored.FinalGameStats;
 import ggp.database.statistics.stored.FinalOverallStats;
 import ggp.database.statistics.stored.FinalPlayerStats;
+import ggp.database.statistics.stored.IntermediateStatistics;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -45,20 +52,13 @@ import com.google.appengine.repackaged.org.json.JSONObject;
 
 /*
  * Still need to convert, for overall:
- *   matchesInPastHour
- *   matchesInPastDay
- *   matchesPerDayMedian
- *   matchesStartedChart
+ *   matchesInPastHour (X)
+ *   matchesInPastDay (X)
+ *   matchesPerDayMedian (X)
  *   
  * Still need to convert, per player:
- *   computedEdgeOn
- *   averageScoreOn
- *   averageScoreVersus
- *   winsVersusPlayerOnGame
- *   
- * Still need to convert, per game:
- *   rolePlayerAverageScore
- *   roleCorrelationWithSkill
+ *   computedEdgeOn (X)
+ *
 */
 
 public class NewStatisticsComputation implements Statistic.Reader {
@@ -159,6 +159,8 @@ public class NewStatisticsComputation implements Statistic.Reader {
         registeredStatistics.add(new AgonRank());
         registeredStatistics.add(new AverageMoves());
         registeredStatistics.add(new AverageScore());
+        registeredStatistics.add(new AverageScoreOn());
+        registeredStatistics.add(new AverageScoreVersus());        
         registeredStatistics.add(new ComputedAt());
         registeredStatistics.add(new ComputeRAM());
         registeredStatistics.add(new ComputeTime());
@@ -169,11 +171,15 @@ public class NewStatisticsComputation implements Statistic.Reader {
         registeredStatistics.add(new MatchesAverageMoves());
         registeredStatistics.add(new MatchesAveragePlayers());
         registeredStatistics.add(new MatchesFinished());
+        registeredStatistics.add(new MatchesStartedChart());
         registeredStatistics.add(new MatchesStatErrors());
         registeredStatistics.add(new NetScore());
         registeredStatistics.add(new ObservedGames());
         registeredStatistics.add(new ObservedPlayers());
+        registeredStatistics.add(new RoleCorrelationWithSkill());
+        registeredStatistics.add(new RolePlayerAverageScore());
         registeredStatistics.add(new StatsVersion());
+        registeredStatistics.add(new WinsVersusPlayerOnGame());
     }
     
     @SuppressWarnings("unchecked")
@@ -224,7 +230,7 @@ public class NewStatisticsComputation implements Statistic.Reader {
                     }
                 }
             }
-            FinalOverallStats.load("x_" + theLabel).setJSON(overallStats);
+            FinalOverallStats.load(theLabel).setJSON(overallStats);
 
             // Store the per-game statistics
             for (String gameName : getStatistic(ObservedGames.class).getGames()) {
@@ -236,7 +242,7 @@ public class NewStatisticsComputation implements Statistic.Reader {
                         }
                     }
                 }
-                FinalGameStats.load("x_" + theLabel, gameName).setJSON(gameStats);
+                FinalGameStats.load(theLabel, gameName).setJSON(gameStats);
             }
 
             // Store the per-player statistics
@@ -249,7 +255,7 @@ public class NewStatisticsComputation implements Statistic.Reader {
                         }
                     }
                 }
-                FinalPlayerStats.load("x_" + theLabel, playerName).setJSON(playerStats);
+                FinalPlayerStats.load(theLabel, playerName).setJSON(playerStats);
             }
         } catch (JSONException e) {
             throw new RuntimeException(e);

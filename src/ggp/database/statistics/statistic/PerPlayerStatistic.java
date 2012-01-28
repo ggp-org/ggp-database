@@ -16,7 +16,7 @@ public abstract class PerPlayerStatistic<T extends Statistic> extends Statistic 
     private static final String playerPrefix = "player_";
     
     Map<String, T> cachedPlayerStats = new HashMap<String, T>();
-    protected T getPerPlayerStatistic(String playerName) {
+    public T getPerPlayerStatistic(String playerName) {
         try {
             if (cachedPlayerStats.containsKey(playerName)) {
                 return cachedPlayerStats.get(playerName);
@@ -32,7 +32,7 @@ public abstract class PerPlayerStatistic<T extends Statistic> extends Statistic 
     }
     
     @Override
-    protected final Object getFinalForm() throws JSONException {
+    protected Object getFinalForm() throws JSONException {
         JSONObject theFinalForm = new JSONObject();
         for (String playerName : getKnownPlayerNames()) {
             theFinalForm.put(playerName, getPerPlayerStatistic(playerName).getFinalForm());
@@ -46,7 +46,7 @@ public abstract class PerPlayerStatistic<T extends Statistic> extends Statistic 
     }
 
     @SuppressWarnings("unchecked")
-    protected Set<String> getKnownPlayerNames() {
+    public Set<String> getKnownPlayerNames() {
         Set<String> theKnownPlayers = new HashSet<String>();
         Iterator<String> i = getState().keys();
         while(i.hasNext()) {
