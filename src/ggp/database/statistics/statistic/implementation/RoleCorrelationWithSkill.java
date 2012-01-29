@@ -3,7 +3,6 @@ package ggp.database.statistics.statistic.implementation;
 import java.util.HashSet;
 import java.util.Set;
 
-import ggp.database.statistics.counters.WeightedAverage;
 import ggp.database.statistics.statistic.CounterStatistic;
 import ggp.database.statistics.statistic.PerGameStatistic;
 import ggp.database.statistics.statistic.PerPlayerStatistic;
@@ -24,14 +23,14 @@ public class RoleCorrelationWithSkill extends PerGameStatistic<PerRoleStatistic<
             for (int i = 0; i < RPAS.getPerGameStatistic(aGame).getKnownRoleCount(); i++) {
                 PerPlayerStatistic<WeightedAverageStatistic.NaiveWeightedAverage> PAS = RPAS.getPerGameStatistic(aGame).getPerRoleStatistic(i);
                 Set<Pair<Double,Double>> dataPoints = new HashSet<Pair<Double,Double>>();
-                WeightedAverage meanScore = new WeightedAverage();
-                WeightedAverage meanSkill = new WeightedAverage();
+                WeightedAverageStatistic.NaiveWeightedAverage meanScore = new WeightedAverageStatistic.NaiveWeightedAverage();
+                WeightedAverageStatistic.NaiveWeightedAverage meanSkill = new WeightedAverageStatistic.NaiveWeightedAverage();
                 for (String aPlayer : PAS.getKnownPlayerNames()) {
                     double theScore = PAS.getPerPlayerStatistic(aPlayer).getWeightedAverage();
                     double theSkill = AGON.getPerPlayerStatistic(aPlayer).getValue();
                     dataPoints.add(new Pair<Double,Double>(theScore, theSkill));
-                    meanScore.addValue(theScore);
-                    meanSkill.addValue(theSkill);                    
+                    meanScore.addEntry(theScore, 1.0);
+                    meanSkill.addEntry(theSkill, 1.0);
                 }
                 double xBar = meanScore.getWeightedAverage();
                 double yBar = meanSkill.getWeightedAverage();
