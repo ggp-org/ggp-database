@@ -20,9 +20,13 @@ public abstract class PerPlayerStatistic<T extends Statistic> extends Statistic 
         try {
             if (cachedPlayerStats.containsKey(playerName)) {
                 return cachedPlayerStats.get(playerName);
-            } else {
+            } else {                
                 T aStat = getInitialStatistic();
-                getState().put(playerPrefix + playerName, aStat.getState());
+                if (getState().has(playerPrefix + playerName)) {
+                    aStat.setState(getState().getJSONObject(playerPrefix + playerName));
+                } else {
+                    getState().put(playerPrefix + playerName, aStat.getState());
+                }
                 cachedPlayerStats.put(playerName, aStat);
                 return aStat;
             }

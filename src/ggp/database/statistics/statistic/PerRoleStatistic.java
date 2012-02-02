@@ -17,7 +17,11 @@ public abstract class PerRoleStatistic<T extends Statistic> extends Statistic {
                 return cachedRoleStats.get(nRole);
             } else {
                 T aStat = getInitialStatistic();
-                getState().put(rolePrefix + nRole, aStat.getState());
+                if (getState().has(rolePrefix + nRole)) {
+                    aStat.setState(getState().getJSONObject(rolePrefix + nRole));
+                } else {                
+                    getState().put(rolePrefix + nRole, aStat.getState());
+                }
                 cachedRoleStats.put(nRole, aStat);
                 return aStat;
             }

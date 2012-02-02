@@ -7,8 +7,8 @@
   </cron>
   <cron>
     <url>/cron/update_stats</url>
-    <description>Update the server statistics every eight hours.</description>
-    <schedule>every 8 hours</schedule>
+    <description>Update the server statistics in batch every day.</description>
+    <schedule>every 24 hours</schedule>
   </cron>
   <cron>
     <url>/cron/update_recent_ongoing</url>

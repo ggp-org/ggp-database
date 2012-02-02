@@ -29,6 +29,12 @@ import com.google.appengine.api.capabilities.CapabilitiesService;
 import com.google.appengine.api.capabilities.CapabilitiesServiceFactory;
 import com.google.appengine.api.capabilities.Capability;
 import com.google.appengine.api.capabilities.CapabilityStatus;
+import com.google.appengine.api.datastore.DatastoreService;
+import com.google.appengine.api.datastore.DatastoreServiceConfig;
+import com.google.appengine.api.datastore.DatastoreServiceFactory;
+import com.google.appengine.api.datastore.Entity;
+import com.google.appengine.api.datastore.KeyFactory;
+import com.google.appengine.api.datastore.ReadPolicy;
 import com.google.appengine.api.taskqueue.QueueFactory;
 import com.google.appengine.api.taskqueue.TaskOptions.Method;
 import com.google.appengine.repackaged.org.json.JSONException;
@@ -89,8 +95,22 @@ public class GGP_DatabaseServlet extends HttpServlet {
             String theMatchURL = req.getParameter("matchURL");
             JSONObject theMatchJSON = RemoteResourceLoader.loadJSON(theMatchURL);
             CondensedMatch.storeCondensedMatchJSON(theMatchURL, theMatchJSON);
-            return;            
-        }      
+            QueueFactory.getQueue("stats").add(withUrl("/tasks/live_update_stats").param("matchURL", theMatchURL).method(Method.GET).retryOptions(withTaskRetryLimit(0)));
+            return;
+        } else if (reqURI.equals("/tasks/live_update_stats")) {
+            String theMatchURL = req.getParameter("matchURL");
+            DatastoreService datastore = DatastoreServiceFactory.getDatastoreService(DatastoreServiceConfig.Builder.withReadPolicy(new ReadPolicy(ReadPolicy.Consistency.EVENTUAL)));
+            try {
+                Entity newMatch = datastore.get(KeyFactory.createKey("CondensedMatch", theMatchURL));
+                if (!(Boolean)newMatch.getProperty("isCompleted")) return;
+                if (isDatastoreWriteable()) {
+                    NewStatisticsComputation.incrementallyAddMatch(newMatch);
+                }
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }            
+            return;
+        }
 
         // Handle requests for browser channel subscriptions.
         if (reqURI.startsWith("/subscribe/")) {

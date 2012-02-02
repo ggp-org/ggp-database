@@ -25,6 +25,7 @@ import ggp.database.statistics.statistic.implementation.ObservedPlayers;
 import ggp.database.statistics.statistic.implementation.RoleCorrelationWithSkill;
 import ggp.database.statistics.statistic.implementation.RolePlayerAverageScore;
 import ggp.database.statistics.statistic.implementation.StatsVersion;
+import ggp.database.statistics.statistic.implementation.UpdatedAt;
 import ggp.database.statistics.statistic.implementation.WinsVersusPlayerOnGame;
 import ggp.database.statistics.stored.FinalGameStats;
 import ggp.database.statistics.stored.FinalOverallStats;
@@ -110,14 +111,13 @@ public class NewStatisticsComputation implements Statistic.Reader {
         }        
     }
     
-    /*
-    public static void incrementallyAddMatch(Entity newMatch) {
+    public static void incrementallyAddMatch(Entity newMatch) {        
         // Load the stored set of statistics computations.
         Map<String, NewStatisticsComputation> statsForLabel = new HashMap<String, NewStatisticsComputation>();
         Set<IntermediateStatistics> theIntermediates = IntermediateStatistics.loadAllIntermediateStatistics();
         for (IntermediateStatistics s : theIntermediates) {
             NewStatisticsComputation r = new NewStatisticsComputation();
-            r.restoreFrom(s.getIntermediateData());
+            r.restoreFrom(s.getJSON());
             statsForLabel.put(s.getKey(), r);
         }
         
@@ -128,12 +128,11 @@ public class NewStatisticsComputation implements Statistic.Reader {
 
         // Save all of the computations for future use.
         for (String theLabel : statsForLabel.keySet()) {
-            statsForLabel.get(theLabel).getStatistic(ComputationTime.class).incrementComputeTime(nComputeFinishedAt - nComputeBeganAt);
+            statsForLabel.get(theLabel).getStatistic(ComputeTime.class).incrementComputeTime(nComputeFinishedAt - nComputeBeganAt);
             statsForLabel.get(theLabel).finalizeComputation();
             statsForLabel.get(theLabel).saveAs(theLabel);
         }        
     }
-    */
 
     private static void addAdditionalMatch(Map<String, NewStatisticsComputation> statsForLabel, Entity match) {
         statsForLabel.get("all").add(match);
@@ -179,6 +178,7 @@ public class NewStatisticsComputation implements Statistic.Reader {
         registeredStatistics.add(new RoleCorrelationWithSkill());
         registeredStatistics.add(new RolePlayerAverageScore());
         registeredStatistics.add(new StatsVersion());
+        registeredStatistics.add(new UpdatedAt());
         registeredStatistics.add(new WinsVersusPlayerOnGame());
     }
     
@@ -203,20 +203,20 @@ public class NewStatisticsComputation implements Statistic.Reader {
         }
     }
     
-    /*
     public void restoreFrom(JSONObject serializedState) {
         for (Statistic s : registeredStatistics) {
             s.loadState(serializedState);
         }
     }
-    */
     
-    public void saveAs(String theLabel) {
+    public void saveAs(String theLabel) {        
         // Store the statistics as a JSON object in the datastore.
+        String activeStat = "None";
         try {
             // Store the intermediate statistics
             JSONObject serializedState = new JSONObject();
             for (Statistic s : registeredStatistics) {
+                activeStat = "inter-"+s.getClass().getSimpleName();
                 s.saveState(serializedState);
             }
             IntermediateStatistics.saveIntermediateStatistics(theLabel, serializedState);
@@ -225,6 +225,7 @@ public class NewStatisticsComputation implements Statistic.Reader {
             JSONObject overallStats = new JSONObject();
             for (Statistic s : registeredStatistics) {
                 for (Statistic.FinalForm f : s.getFinalForms()) {
+                    activeStat = s.getClass().getSimpleName() + ":" + f.name;
                     if (f.value != null) {
                         overallStats.put(f.name, f.value);
                     }
@@ -237,6 +238,7 @@ public class NewStatisticsComputation implements Statistic.Reader {
                 JSONObject gameStats = new JSONObject();
                 for (Statistic s : registeredStatistics) {
                     for (Statistic.FinalForm f : s.getPerGameFinalForms(gameName)) {
+                        activeStat = s.getClass().getSimpleName() + ":" + f.name;
                         if (f.value != null) {
                             gameStats.put(f.name, f.value);
                         }
@@ -250,6 +252,7 @@ public class NewStatisticsComputation implements Statistic.Reader {
                 JSONObject playerStats = new JSONObject();
                 for (Statistic s : registeredStatistics) {
                     for (Statistic.FinalForm f : s.getPerPlayerFinalForms(playerName)) {
+                        activeStat = s.getClass().getSimpleName() + ":" + f.name;
                         if (f.value != null) {
                             playerStats.put(f.name, f.value);
                         }
@@ -258,7 +261,7 @@ public class NewStatisticsComputation implements Statistic.Reader {
                 FinalPlayerStats.load(theLabel, playerName).setJSON(playerStats);
             }
         } catch (JSONException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException(activeStat + ":" + e);
         }        
     }
 }

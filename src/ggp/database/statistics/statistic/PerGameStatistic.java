@@ -20,7 +20,11 @@ public abstract class PerGameStatistic<T extends Statistic> extends Statistic {
                 return cachedGameStats.get(gameName);
             } else {
                 T aStat = getInitialStatistic();
-                getState().put(gamePrefix + gameName, aStat.getState());
+                if (getState().has(gamePrefix + gameName)) {
+                    aStat.setState(getState().getJSONObject(gamePrefix + gameName));
+                } else {
+                    getState().put(gamePrefix + gameName, aStat.getState());
+                }
                 cachedGameStats.put(gameName, aStat);
                 return aStat;
             }

@@ -15,7 +15,7 @@ import com.google.appengine.repackaged.com.google.common.base.Pair;
 public class RoleCorrelationWithSkill extends PerGameStatistic<PerRoleStatistic<CounterStatistic.NaiveCounter>> {
     public void updateWithMatch(Entity newMatch) {}
     
-    public void finalizeComputation(Reader theReader) {        
+    public void finalizeComputation(Reader theReader) {
         AgonRank AGON = theReader.getStatistic(AgonRank.class);
         RolePlayerAverageScore RPAS = theReader.getStatistic(RolePlayerAverageScore.class);
         

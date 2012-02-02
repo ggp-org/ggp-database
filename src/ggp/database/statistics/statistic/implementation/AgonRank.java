@@ -54,6 +54,14 @@ public class AgonRank extends EloRank {
                 theSkills.put(key, theSkill);                
             }
         }
+        if (maxSkill == minSkill) {
+            maxSkill += 1;
+            minSkill -= 1;
+        }
+        if (maxDifficulty == minDifficulty) {
+            maxDifficulty += 1;
+            minDifficulty -= 1;
+        }
         theScaledSkills = new HashMap<String,Double>();
         theScaledDifficulties = new HashMap<String,List<Double>>();
         for (String key : theSkills.keySet()) {
