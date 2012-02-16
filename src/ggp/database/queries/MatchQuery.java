@@ -34,46 +34,37 @@ public class MatchQuery {
                 return;
             }
             Query query = Persistence.getPersistenceManager().newQuery(CondensedMatch.class);
-            if (theHost.equals("unsigned")) {
-              query.setFilter("hashedMatchHostPK == null");
-            } else if (!theHost.equals("all")) {
-              query.setFilter("hashedMatchHostPK == '" + theHost + "'");
-            }
+            String queryFilter = "";
             if (theVerb.equals("filterPlayer")) {
                 String thePlayer = theSplit[3];
                 if (thePlayer.length() == 0) {
                     resp.setStatus(404);
                     return;
                 }
-                String theFilter = "playerNamesFromHost == '" + thePlayer + "' && hashedMatchHostPK == '" + theHost + "'";
-                if (theHost.equals("all")) throw new RuntimeException("Cross-host player filtering is not sane.");
-                if (theHost.equals("unsigned")) throw new RuntimeException("Unsigned player filtering is not sane.");
-                query.setFilter(theFilter);
+                queryFilter += "playerNamesFromHost == '" + thePlayer + "'";
             } else if (theVerb.equals("filterGame")) {
                 String theGame = theSplit[3];
                 if (theGame.length() == 0) {
                     resp.setStatus(404);
                     return;
                 }
-                String theFilter = "gameMetaURL == '" + theGame + "'";
-                if (theHost.equals("unsigned")) {
-                    theFilter += " && hashedMatchHostPK == null";
-                } else if (!theHost.equals("all")) {
-                    theFilter += " && hashedMatchHostPK == '" + theHost + "'";
-                }
-                query.setFilter(theFilter);
+                queryFilter += "gameMetaURL == '" + theGame + "'";
             } else if (theVerb.equals("filterActiveSet")) {
                 String sixHoursAgo = "" + (System.currentTimeMillis() - 21600000L);
-                String theFilter = "isCompleted == false && startTime > " + sixHoursAgo;
-                if (theHost.equals("unsigned")) {
-                    theFilter += " && hashedMatchHostPK == null";
-                } else if (!theHost.equals("all")) {
-                    theFilter += " && hashedMatchHostPK == '" + theHost + "'";
-                }
-                query.setFilter(theFilter);
+                queryFilter += "isCompleted == false && startTime > " + sixHoursAgo;
             } else if (!theVerb.equals("filter")) {
                 resp.setStatus(404);
                 return;
+            }
+            if (theHost.equals("unsigned")) {
+                if (!queryFilter.isEmpty()) queryFilter += " && ";
+                queryFilter += "hashedMatchHostPK == null";
+            } else if (!theHost.equals("all")) {
+                if (!queryFilter.isEmpty()) queryFilter += " && ";
+                queryFilter += "hashedMatchHostPK == '" + theHost + "'";
+            }
+            if (!queryFilter.isEmpty()) {
+                query.setFilter(queryFilter);
             }
             if (theDomain.equals("recent")) {            
                 query.setOrdering("startTime desc");
