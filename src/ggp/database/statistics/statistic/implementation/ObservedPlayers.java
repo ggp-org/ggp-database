@@ -1,6 +1,7 @@
 package ggp.database.statistics.statistic.implementation;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import ggp.database.statistics.statistic.PerPlayerStatistic;
@@ -15,12 +16,15 @@ public class ObservedPlayers extends Statistic {
     
     public ObservedPlayers() {
         try {
-            JSONArray theGamesArray = getState().getJSONArray("thePlayers");
-            for (int i = 0; i < theGamesArray.length(); i++) {
-                thePlayers.add(theGamesArray.getString(i));
+            if (!getState().has("thePlayers")) {
+                getState().put("thePlayers", new JSONArray());
+            }
+            JSONArray thePlayersArray = getState().getJSONArray("thePlayers");
+            for (int i = 0; i < thePlayersArray.length(); i++) {
+                thePlayers.add(thePlayersArray.getString(i));
             }
         } catch (JSONException e) {
-            ;
+            throw new RuntimeException(e);
         }
     }
     
@@ -29,14 +33,16 @@ public class ObservedPlayers extends Statistic {
     }    
     
     @Override public void updateWithMatch(Entity newMatch) {
-        thePlayers.addAll(PerPlayerStatistic.getPlayerNames(newMatch));
-    }
-    
-    @Override public void finalizeComputation(Statistic.Reader theReader) {
-        try {
-            getState().put("thePlayers", thePlayers);
-        } catch (JSONException e) {
-            ;
+        List<String> theMatchPlayers = PerPlayerStatistic.getPlayerNames(newMatch);
+        for (String playerName : theMatchPlayers) {
+            if (!thePlayers.contains(playerName)) {
+                thePlayers.add(playerName);
+                try {
+                    getState().getJSONArray("thePlayers").put(playerName);
+                } catch (JSONException e) {
+                    throw new RuntimeException(e);
+                }
+            }
         }
     }
     

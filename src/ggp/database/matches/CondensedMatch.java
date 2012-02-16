@@ -312,7 +312,7 @@ public class CondensedMatch {
     }    
 
     /* Static accessor methods */
-    public static void storeCondensedMatchJSON(String matchURL, JSONObject theMatchJSON) throws IOException {        
+    public static CondensedMatch storeCondensedMatchJSON(String matchURL, JSONObject theMatchJSON) throws IOException {        
         try {
             boolean changedActiveSet = false;
             CondensedMatch theMatchData = Persistence.loadSpecific(matchURL, CondensedMatch.class);
@@ -324,6 +324,7 @@ public class CondensedMatch {
                 if (!theMatchData.isCompleted) changedActiveSet = false;
             }
             theMatchData.save();
+            // TODO: handle pings in a separate task queue?
             theMatchData.pingChannelClients();
             if (theMatchData.hashedMatchHostPK != null && !theMatchData.hashedMatchHostPK.isEmpty()) {
                 UpdateRegistry.pingClients("query/filter,recent," + theMatchData.hashedMatchHostPK);
@@ -337,8 +338,10 @@ public class CondensedMatch {
                     }
                 }
             }
+            return theMatchData;
         } catch (SignatureException se) {
             // Match not signed: ignore it.
+            return null;
         } catch (JSONException je) {
             throw new IOException(je); // Match JSON not valid: ignore it;
         }

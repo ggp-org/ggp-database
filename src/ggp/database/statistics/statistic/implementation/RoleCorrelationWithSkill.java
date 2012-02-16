@@ -45,7 +45,7 @@ public class RoleCorrelationWithSkill extends PerGameStatistic<PerRoleStatistic<
                     theCorrelation = -1;
                 }
                 
-                getPerGameStatistic(aGame).getPerRoleStatistic(i).incrementCounter(theCorrelation);
+                getPerGameStatistic(aGame).getPerRoleStatistic(i).setCounter(theCorrelation);
             }
         }
     }

@@ -28,6 +28,7 @@ public abstract class CounterStatistic extends Statistic {
     
     public static class NaiveCounter extends CounterStatistic {
         public void updateWithMatch(Entity newMatch) {};
+        public void setCounter(double byValue) { super.setCounter(byValue); }
         public void incrementCounter(double byValue) { super.incrementCounter(byValue); }
         public double getValue() { return super.getValue(); }
     }

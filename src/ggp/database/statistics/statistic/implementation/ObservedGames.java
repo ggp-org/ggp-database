@@ -14,12 +14,15 @@ public class ObservedGames extends Statistic {
     
     public ObservedGames() {
         try {
+            if (!getState().has("theGames")) {
+                getState().put("theGames", new JSONArray());
+            }
             JSONArray theGamesArray = getState().getJSONArray("theGames");
             for (int i = 0; i < theGamesArray.length(); i++) {
                 theGames.add(theGamesArray.getString(i));
             }
         } catch (JSONException e) {
-            ;
+            throw new RuntimeException(e);
         }
     }
     
@@ -28,14 +31,14 @@ public class ObservedGames extends Statistic {
     }
     
     @Override public void updateWithMatch(Entity newMatch) {
-        theGames.add(newMatch.getProperty("gameMetaURL").toString());
-    }
-    
-    @Override public void finalizeComputation(Statistic.Reader theReader) {
-        try {
-            getState().put("theGames", theGames);
-        } catch (JSONException e) {
-            ;
+        String theGame = newMatch.getProperty("gameMetaURL").toString();
+        if (!theGames.contains(theGame)) {
+            theGames.add(theGame);
+            try {
+                getState().getJSONArray("theGames").put(theGame);
+            } catch (JSONException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
     
