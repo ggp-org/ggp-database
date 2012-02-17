@@ -42,7 +42,7 @@ public class RoleCorrelationWithSkill extends PerGameStatistic<PerRoleStatistic<
                 }
                 double theCorrelation = A/Math.sqrt(B*C);
                 if (Double.isInfinite(theCorrelation) || Double.isNaN(theCorrelation)) {
-                    theCorrelation = -1;
+                    theCorrelation = -99;
                 }
                 
                 getPerGameStatistic(aGame).getPerRoleStatistic(i).setCounter(theCorrelation);
