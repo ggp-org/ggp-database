@@ -4,11 +4,16 @@ import ggp.database.Persistence;
 import ggp.database.matches.CondensedMatch;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.jdo.Query;
 import javax.servlet.http.HttpServletResponse;
 
+import org.datanucleus.store.appengine.query.JDOCursorHelper;
+
+import com.google.appengine.api.datastore.Cursor;
 import com.google.appengine.repackaged.org.json.JSONArray;
 import com.google.appengine.repackaged.org.json.JSONException;
 import com.google.appengine.repackaged.org.json.JSONObject;
@@ -19,7 +24,7 @@ public class MatchQuery {
         JSONObject theResponse = null;
         if (theRPC.startsWith("filter")) {
             String[] theSplit = theRPC.split(",");
-            String theVerb, theDomain, theHost;
+            String theVerb, theDomain, theHost, theCursor = null;
             try {
                 theVerb = theSplit[0];
                 theDomain = theSplit[1];
@@ -27,6 +32,9 @@ public class MatchQuery {
             } catch (ArrayIndexOutOfBoundsException e) {
                 resp.setStatus(404);
                 return;
+            }
+            if (theSplit.length > 3) {
+                theCursor = theSplit[3];
             }
             
             if (theVerb.length() == 0 || theDomain.length() == 0 || theHost.length() == 0) {
@@ -73,7 +81,14 @@ public class MatchQuery {
                 resp.setStatus(404);
                 return;
             }
+            if (theCursor != null) {
+                Cursor cursor = Cursor.fromWebSafeString(theCursor);
+                Map<String, Object> extensionMap = new HashMap<String, Object>();
+                extensionMap.put(JDOCursorHelper.CURSOR_EXTENSION, cursor);
+                query.setExtensions(extensionMap);
+            }
             
+            String newCursor = "";
             JSONArray theArray = new JSONArray();
             try {
                 List<CondensedMatch> results = (List<CondensedMatch>) query.execute();
@@ -84,6 +99,8 @@ public class MatchQuery {
                         } else {
                             theArray.put(e.getMatchJSON());
                         }
+                        Cursor cursor = JDOCursorHelper.getCursor(results);
+                        newCursor = cursor.toWebSafeString();
                     }
                 } else {
                     // ... no results ...
@@ -95,6 +112,7 @@ public class MatchQuery {
             try {
                 theResponse = new JSONObject();
                 theResponse.put("queryMatches", theArray);
+                theResponse.put("queryCursor", newCursor);
             } catch (JSONException je) {
                 ;
             }
