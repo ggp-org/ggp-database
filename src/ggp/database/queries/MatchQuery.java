@@ -4,6 +4,9 @@ import ggp.database.Persistence;
 import ggp.database.matches.CondensedMatch;
 
 import java.io.IOException;
+import java.util.ArrayDeque;
+import java.util.Arrays;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,18 +26,15 @@ public class MatchQuery {
     public static void respondToQuery(HttpServletResponse resp, String theRPC) throws IOException {
         JSONObject theResponse = null;
         if (theRPC.startsWith("filter")) {
-            String[] theSplit = theRPC.split(",");
-            String theVerb, theDomain, theHost, theCursor = null;
+            Deque<String> theSplitParams = new ArrayDeque<String>(Arrays.asList(theRPC.split(",")));
+            String theVerb, theDomain, theHost;
             try {
-                theVerb = theSplit[0];
-                theDomain = theSplit[1];
-                theHost = theSplit[2];
+                theVerb = theSplitParams.pop();
+                theDomain = theSplitParams.pop();
+                theHost = theSplitParams.pop();
             } catch (ArrayIndexOutOfBoundsException e) {
                 resp.setStatus(404);
                 return;
-            }
-            if (theSplit.length > 3) {
-                theCursor = theSplit[3];
             }
             
             if (theVerb.length() == 0 || theDomain.length() == 0 || theHost.length() == 0) {
@@ -44,14 +44,14 @@ public class MatchQuery {
             Query query = Persistence.getPersistenceManager().newQuery(CondensedMatch.class);
             String queryFilter = "";
             if (theVerb.equals("filterPlayer")) {
-                String thePlayer = theSplit[3];
+                String thePlayer = theSplitParams.pop();
                 if (thePlayer.length() == 0) {
                     resp.setStatus(404);
                     return;
                 }
                 queryFilter += "playerNamesFromHost == '" + thePlayer + "'";
             } else if (theVerb.equals("filterGame")) {
-                String theGame = theSplit[3];
+                String theGame = theSplitParams.pop();
                 if (theGame.length() == 0) {
                     resp.setStatus(404);
                     return;
@@ -81,8 +81,8 @@ public class MatchQuery {
                 resp.setStatus(404);
                 return;
             }
-            if (theCursor != null) {
-                Cursor cursor = Cursor.fromWebSafeString(theCursor);
+            if (!theSplitParams.isEmpty()) {
+                Cursor cursor = Cursor.fromWebSafeString(theSplitParams.pop());
                 Map<String, Object> extensionMap = new HashMap<String, Object>();
                 extensionMap.put(JDOCursorHelper.CURSOR_EXTENSION, cursor);
                 query.setExtensions(extensionMap);
