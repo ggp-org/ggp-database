@@ -10,10 +10,13 @@ import com.google.appengine.repackaged.org.json.JSONArray;
 import com.google.appengine.repackaged.org.json.JSONException;
 
 public class ObservedGames extends Statistic {
-    private Set<String> theGames = new HashSet<String>();
+    private Set<String> theGames;
     
-    public ObservedGames() {
+    private void makeInitialized() {
+        if (theGames != null)
+            return;
         try {
+            theGames = new HashSet<String>();
             if (!getState().has("theGames")) {
                 getState().put("theGames", new JSONArray());
             }
@@ -27,10 +30,12 @@ public class ObservedGames extends Statistic {
     }
     
     public Set<String> getGames() {
+        makeInitialized();
         return theGames;
     }
     
     @Override public void updateWithMatch(Entity newMatch) {
+        makeInitialized();
         String theGame = newMatch.getProperty("gameMetaURL").toString();
         if (!theGames.contains(theGame)) {
             theGames.add(theGame);
