@@ -16,5 +16,9 @@
     <static-files>
         <include path="favicon.ico" />
         <include path="static/**" />
-    </static-files>	
+    </static-files>
+    
+    <admin-console>
+        <page name="Appstats" url="/appstats" />
+    </admin-console>    
 </appengine-web-app>
