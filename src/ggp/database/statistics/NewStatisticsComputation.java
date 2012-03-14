@@ -111,14 +111,15 @@ public class NewStatisticsComputation implements Statistic.Reader {
         }        
     }
     
-    public static void incrementallyAddMatch(Entity newMatch) {        
+    public static void incrementallyAddMatch(Entity newMatch) {
         // Load the stored set of statistics computations.
+        Set<String> labelsToFetch = getLabelsForMatch(newMatch);
         Map<String, NewStatisticsComputation> statsForLabel = new HashMap<String, NewStatisticsComputation>();
-        Set<IntermediateStatistics> theIntermediates = IntermediateStatistics.loadAllIntermediateStatistics();
-        for (IntermediateStatistics s : theIntermediates) {
+        for (String labelToFetch : labelsToFetch) {
             NewStatisticsComputation r = new NewStatisticsComputation();
-            r.restoreFrom(s.getJSON());
-            statsForLabel.put(s.getKey(), r);
+            r.restoreFrom(IntermediateStatistics.loadIntermediateStatistics(labelToFetch));
+            statsForLabel.put(labelToFetch, r);
+            System.gc();
         }
         
         // Compute statistics by iterating over all of the stored matches in order.
@@ -127,24 +128,35 @@ public class NewStatisticsComputation implements Statistic.Reader {
         long nComputeFinishedAt = System.currentTimeMillis();
 
         // Save all of the computations for future use.
-        for (String theLabel : statsForLabel.keySet()) {
+        Set<String> theLabels = new HashSet<String>(statsForLabel.keySet());
+        for (String theLabel : theLabels) {
             statsForLabel.get(theLabel).getStatistic(ComputeTime.class).incrementComputeTime(nComputeFinishedAt - nComputeBeganAt);
             statsForLabel.get(theLabel).finalizeComputation();
             statsForLabel.get(theLabel).saveAs(theLabel);
+            statsForLabel.remove(theLabel);
+            System.gc();
         }        
+    }
+    
+    private static Set<String> getLabelsForMatch(Entity match) {
+        Set<String> theLabels = new HashSet<String>();
+        theLabels.add("all");
+        if (match.getProperty("hashedMatchHostPK") != null) {
+            String theHostPK = (String)match.getProperty("hashedMatchHostPK");
+            theLabels.add(theHostPK);
+        } else {
+            theLabels.add("unsigned");
+        }
+        return theLabels;
     }
 
     private static void addAdditionalMatch(Map<String, NewStatisticsComputation> statsForLabel, Entity match) {
-        statsForLabel.get("all").add(match);
-        if (match.getProperty("hashedMatchHostPK") != null) {
-          String theHostPK = (String)match.getProperty("hashedMatchHostPK");
-          if (!statsForLabel.containsKey(theHostPK)) {
-            statsForLabel.put(theHostPK, new NewStatisticsComputation());
-          }
-          statsForLabel.get(theHostPK).add(match);
-        } else {
-          statsForLabel.get("unsigned").add(match);
-        }        
+        for (String aLabel : getLabelsForMatch(match)) {
+            if (!statsForLabel.containsKey(aLabel)) {
+                statsForLabel.put(aLabel, new NewStatisticsComputation());
+            }
+            statsForLabel.get(aLabel).add(match);
+        }
     }
 
     private Set<Statistic> registeredStatistics;
@@ -231,7 +243,7 @@ public class NewStatisticsComputation implements Statistic.Reader {
                     }
                 }
             }
-            FinalOverallStats.load(theLabel).setJSON(overallStats);
+            new FinalOverallStats(theLabel).setJSON(overallStats);
 
             // Store the per-game statistics
             for (String gameName : getStatistic(ObservedGames.class).getGames()) {
@@ -244,7 +256,7 @@ public class NewStatisticsComputation implements Statistic.Reader {
                         }
                     }
                 }
-                FinalGameStats.load(theLabel, gameName).setJSON(gameStats);
+                new FinalGameStats(theLabel, gameName).setJSON(gameStats);
             }
 
             // Store the per-player statistics
@@ -258,7 +270,7 @@ public class NewStatisticsComputation implements Statistic.Reader {
                         }
                     }
                 }
-                FinalPlayerStats.load(theLabel, playerName).setJSON(playerStats);
+                new FinalPlayerStats(theLabel, playerName).setJSON(playerStats);
             }
         } catch (JSONException e) {
             throw new RuntimeException(activeStat + ":" + e);
