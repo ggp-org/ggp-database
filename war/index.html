@@ -1,61 +1,11 @@
 <html>
   <head>
     <title>GGP Database Server</title>
-    <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
   </head>
   <body>
-    <script type='text/javascript' src='//www.ggp.org/scripts/common/ResourceLoader.js'></script>
-    <script type='text/javascript' src='//www.ggp.org/scripts/common/UserInterface.js'></script>
-    <script type="text/javascript" src="//www.ggp.org/scripts/external/jquery.flot.js"></script>
-    <script language="javascript" type="text/javascript" src="//people.iola.dk/olau/flot/jquery.flot.stack.js"></script>
-
-<style>
-th {
-  font-variant: small-caps;
-  font-size: 20px;
-}
-th.top_th {
-  background-image: -webkit-gradient(
-    linear,
-    left bottom,
-    left top,
-    color-stop(0.24, #CCC),
-    color-stop(0.81, #AAA)
-  );
-  background-image: -moz-linear-gradient(
-    center bottom,
-    rgb(230,230,230) 24%,
-    rgb(184,184,184) 81%
-  );
-}
-td.name {
-  font-weight:bold;
-  width: 200px;
-}
-</style>
-
-    <div id='header'></div>
-    <br>
     <center>
       <h1>GGP Match Database</h1>
-      <h3>Don't get too excited, this is still being brought online...</h3>
-      <br>    
-      <div id="status_div" width=150px></div><br>
-      <div id="push_viz" style="width:600px;height:300px;"></div>
+      <h3>Nothing to see here...</h3>
     </center>
-
-    <script type='text/javascript'>
-      var serverState = ResourceLoader.load_json('/data/serverState/overall');
-      var stateHTML = 'Most recent match key sent via PuSH: <br><tt>' + serverState.mostRecentUpdate + '</tt><br>';
-      stateHTML += 'That match key was sent at ' + UserInterface.renderDateTime(new Date(serverState.mostRecentUpdateDate)) + '.<br>';
-      document.getElementById('status_div').innerHTML = stateHTML;
-
-      var timesAgo = [];
-      serverState.recentUpdateTimes.reverse();
-      for (var i = 0; i < serverState.recentUpdateTimes.length; i++) {
-        timesAgo.push([i, (new Date() - new Date(serverState.recentUpdateTimes[i])) / 60000.0 ]);        
-      }
-      $.plot($("#push_viz"), [ {data: timesAgo, label: "PuSH Update Freshness", lines: { show: true, fill: true }} ], {legend: { position: 'nw' }});
-    </script>
   </body>  
 </html>

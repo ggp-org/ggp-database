@@ -36,7 +36,7 @@ public class UpdateRegistry {
     @PrimaryKey @Persistent private String registryKey;
     @Persistent private List<String> theClientIDs;
     
-    private static final int MAX_SUBSCRIPTIONS = 100;
+    private static final int MAX_SUBSCRIPTIONS = 10;
     
     public UpdateRegistry(String theKey) {
         registryKey = theKey;

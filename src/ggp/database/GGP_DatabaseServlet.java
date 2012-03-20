@@ -18,8 +18,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URLEncoder;
-import java.util.ArrayList;
-import java.util.List;
 
 import javax.servlet.http.*;
 
@@ -36,7 +34,6 @@ import com.google.appengine.api.datastore.KeyFactory;
 import com.google.appengine.api.datastore.ReadPolicy;
 import com.google.appengine.api.taskqueue.QueueFactory;
 import com.google.appengine.api.taskqueue.TaskOptions.Method;
-import com.google.appengine.repackaged.org.json.JSONException;
 import com.google.appengine.repackaged.org.json.JSONObject;
 
 @SuppressWarnings("serial")
@@ -144,10 +141,6 @@ public class GGP_DatabaseServlet extends HttpServlet {
             return;
         }
 
-        if (reqURI.startsWith("/data/")) {
-            respondToRPC(resp, reqURI.replaceFirst("/data/", ""));
-            return;
-        }
         if (reqURI.startsWith("/query/")) {
             MatchQuery.respondToQuery(resp, reqURI.replaceFirst("/query/", ""));
             return;
@@ -216,34 +209,6 @@ public class GGP_DatabaseServlet extends HttpServlet {
         }
         in.close();        
     }    
-    
-    public static void respondToRPC(HttpServletResponse resp, String theRPC) throws IOException {
-        JSONObject theResponse = null;
-        if (theRPC.startsWith("serverState")) {
-            String theProperty = theRPC.replaceFirst("serverState/", "");                                
-            if (theProperty.equals("overall")) {
-                ServerState ss = ServerState.loadState();
-                try {
-                    JSONObject theState = new JSONObject();
-                    theState.put("mostRecentUpdate", ss.getMostRecentUpdate());
-                    theState.put("mostRecentUpdateDate", ss.getMostRecentUpdateWhen().getTime());
-                    List<Long> updateTimesList = new ArrayList<Long>();
-                    for(int i = 0; i < ss.getUpdateTimes().size(); i++) {
-                        updateTimesList.add(ss.getUpdateTimes().get(i).getTime());
-                    }
-                    theState.put("recentUpdateTimes", updateTimesList);
-                    theResponse = theState;
-                } catch (JSONException e) {
-                    ;
-                }
-            }
-        }
-        if (theResponse != null) {
-            resp.getWriter().println(theResponse.toString());
-        } else {
-            resp.setStatus(404);
-        }            
-    }
 
     public void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws IOException {
@@ -260,17 +225,13 @@ public class GGP_DatabaseServlet extends HttpServlet {
                 theInput.append((char)br.read());
             }
             String in = theInput.toString().trim();
-            
+
             String theLink = in.replace("http://matches.ggp.org/matches/feeds/updatedFeed.atom", "");
             theLink = theLink.replace("http://matches.ggp.org/matches/feeds/completedFeed.atom", "");
             theLink = theLink.substring(theLink.indexOf("<link href=\"http://matches.ggp.org/matches/"));
             theLink = theLink.substring("<link href=\"http://matches.ggp.org/matches/".length(), theLink.indexOf("\"/>"));
             theLink = "http://matches.ggp.org/matches/" + theLink;
 
-            ServerState ss = ServerState.loadState();
-            ss.addUpdate(theLink);
-            ss.save();
-            
             QueueFactory.getDefaultQueue().add(withUrl("/tasks/ingest_match").method(Method.GET).param("matchURL", theLink).retryOptions(withTaskRetryLimit(6)));
 
             resp.setStatus(200);

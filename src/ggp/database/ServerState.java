@@ -1,31 +1,20 @@
 package ggp.database;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
 import javax.jdo.PersistenceManager;
 import javax.jdo.annotations.*;
 
-import com.google.appengine.api.datastore.Text;
-
 @PersistenceCapable
 public class ServerState {
     @SuppressWarnings("unused")
     @PrimaryKey @Persistent private String thePrimaryKey;
-    @Persistent private Text mostRecentUpdate;
-    @Persistent private Date mostRecentUpdateWhen;
-    @Persistent private List<Date> mostRecentUpdateTimes;
     @Persistent private String theValidationToken;
-
-    private static final int UPDATE_TIMES_TO_STORE = 100;
 
     private ServerState() {
         thePrimaryKey = "ServerState";
-        mostRecentUpdateTimes = new ArrayList<Date>();
         theValidationToken = getRandomString(32);
     }
 
@@ -36,28 +25,6 @@ public class ServerState {
 
     public void rotateValidationToken() {
         theValidationToken = getRandomString(32);
-    }
-
-    public void addUpdate(String theUpdate) {
-        mostRecentUpdate = new Text(theUpdate);
-        mostRecentUpdateWhen = new Date();
-        mostRecentUpdateTimes.add(new Date());
-        if (mostRecentUpdateTimes.size() > UPDATE_TIMES_TO_STORE)
-            mostRecentUpdateTimes.remove(0);
-    }
-
-    public String getMostRecentUpdate() {
-        if (mostRecentUpdate == null) return null;
-        return mostRecentUpdate.getValue();
-    }
-
-    public Date getMostRecentUpdateWhen() {
-        if (mostRecentUpdateWhen == null) return null;
-        return mostRecentUpdateWhen;
-    }
-
-    public List<Date> getUpdateTimes() {
-        return mostRecentUpdateTimes;
     }
 
     public void save() {
