@@ -1,6 +1,7 @@
 package ggp.database.statistics;
 
 import static com.google.appengine.api.datastore.FetchOptions.Builder.withChunkSize;
+import ggp.database.statistics.statistic.PerPlayerStatistic;
 import ggp.database.statistics.statistic.Statistic;
 import ggp.database.statistics.statistic.implementation.AgonRank;
 import ggp.database.statistics.statistic.implementation.AverageMoves;
@@ -50,17 +51,6 @@ import com.google.appengine.api.datastore.ReadPolicy;
 
 import com.google.appengine.repackaged.org.json.JSONException;
 import com.google.appengine.repackaged.org.json.JSONObject;
-
-/*
- * Still need to convert, for overall:
- *   matchesInPastHour (X)
- *   matchesInPastDay (X)
- *   matchesPerDayMedian (X)
- *   
- * Still need to convert, per player:
- *   computedEdgeOn (X)
- *
-*/
 
 public class NewStatisticsComputation implements Statistic.Reader {
     public static void computeBatchStatistics() throws IOException {
@@ -160,8 +150,12 @@ public class NewStatisticsComputation implements Statistic.Reader {
     }
 
     private Set<Statistic> registeredStatistics;
+    private Set<String> alteredPlayers;
+    private Set<String> alteredGames;
     
     public NewStatisticsComputation () {
+        alteredGames = new HashSet<String>();
+        alteredPlayers = new HashSet<String>();
         registeredStatistics = new HashSet<Statistic>();
         /* TODO: get this working
         for (Statistic aStat : ServiceLoader.load(Statistic.class)) {
@@ -207,6 +201,8 @@ public class NewStatisticsComputation implements Statistic.Reader {
         for (Statistic s : registeredStatistics) {
             s.updateWithMatch(theMatch);
         }
+        alteredPlayers.addAll(PerPlayerStatistic.getPlayerNames(theMatch));
+        alteredGames.add(theMatch.getProperty("gameMetaURL").toString());        
     }
     
     public void finalizeComputation() {
@@ -221,7 +217,7 @@ public class NewStatisticsComputation implements Statistic.Reader {
         }
     }
     
-    public void saveAs(String theLabel) {        
+    public void saveAs(String theLabel) {
         // Store the statistics as a JSON object in the datastore.
         String activeStat = "None";
         try {
@@ -246,7 +242,8 @@ public class NewStatisticsComputation implements Statistic.Reader {
             new FinalOverallStats(theLabel).setJSON(overallStats);
 
             // Store the per-game statistics
-            for (String gameName : getStatistic(ObservedGames.class).getGames()) {
+            // Only write statistics for games that appeared in added matches
+            for (String gameName : alteredGames) {
                 JSONObject gameStats = new JSONObject();
                 for (Statistic s : registeredStatistics) {
                     for (Statistic.FinalForm f : s.getPerGameFinalForms(gameName)) {
@@ -260,7 +257,8 @@ public class NewStatisticsComputation implements Statistic.Reader {
             }
 
             // Store the per-player statistics
-            for (String playerName : getStatistic(ObservedPlayers.class).getPlayers()) {
+            // Only write statistics for players who appeared in added matches
+            for (String playerName : alteredPlayers) {
                 JSONObject playerStats = new JSONObject();
                 for (Statistic s : registeredStatistics) {
                     for (Statistic.FinalForm f : s.getPerPlayerFinalForms(playerName)) {
