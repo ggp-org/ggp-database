@@ -94,10 +94,13 @@ public class NewStatisticsComputation implements Statistic.Reader {
         long nComputeFinishedAt = System.currentTimeMillis();
         
         // Save all of the statistics
-        for (String theLabel : statsForLabel.keySet()) {
+        Set<String> theLabels = new HashSet<String>(statsForLabel.keySet());
+        for (String theLabel : theLabels) {
             statsForLabel.get(theLabel).getStatistic(ComputeTime.class).incrementComputeTime(nComputeFinishedAt - nComputeBeganAt);
             statsForLabel.get(theLabel).finalizeComputation();
             statsForLabel.get(theLabel).saveAs(theLabel);
+            statsForLabel.remove(theLabel);
+            System.gc();
         }        
     }
     
