@@ -5,8 +5,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 import com.google.appengine.api.datastore.Entity;
-import com.google.appengine.repackaged.org.json.JSONException;
-import com.google.appengine.repackaged.org.json.JSONObject;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public abstract class Statistic {
     private JSONObject state;

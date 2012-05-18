@@ -4,6 +4,8 @@ import static com.google.appengine.api.taskqueue.RetryOptions.Builder.withTaskRe
 import static com.google.appengine.api.taskqueue.TaskOptions.Builder.withUrl;
 
 import ggp.database.cron.UpdateOngoing;
+import ggp.database.logs.MatchLog;
+import ggp.database.logs.StoredCryptoKeys;
 import ggp.database.matches.CondensedMatch;
 import ggp.database.notifications.ChannelService;
 import ggp.database.notifications.UpdateRegistry;
@@ -22,6 +24,7 @@ import java.net.URLEncoder;
 import javax.servlet.http.*;
 
 import util.configuration.RemoteResourceLoader;
+import util.crypto.BaseCryptography;
 
 import com.google.appengine.api.capabilities.CapabilitiesService;
 import com.google.appengine.api.capabilities.CapabilitiesServiceFactory;
@@ -34,7 +37,8 @@ import com.google.appengine.api.datastore.KeyFactory;
 import com.google.appengine.api.datastore.ReadPolicy;
 import com.google.appengine.api.taskqueue.QueueFactory;
 import com.google.appengine.api.taskqueue.TaskOptions.Method;
-import com.google.appengine.repackaged.org.json.JSONObject;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 @SuppressWarnings("serial")
 public class GGP_DatabaseServlet extends HttpServlet {
@@ -93,6 +97,11 @@ public class GGP_DatabaseServlet extends HttpServlet {
             CondensedMatch theMatch = CondensedMatch.storeCondensedMatchJSON(theMatchURL, theMatchJSON);
             if (theMatch.isCompleted) {
                 QueueFactory.getQueue("stats").add(withUrl("/tasks/live_update_stats").param("matchURL", theMatchURL).method(Method.GET).retryOptions(withTaskRetryLimit(0)));
+                for (String aPlayer : theMatch.playerNamesFromHost) {
+                    if (aPlayer.equals("CloudKingdom")) {
+                        QueueFactory.getQueue("stats").add(withUrl("/tasks/fetch_log").param("matchURL", theMatchURL).param("playerName", aPlayer).param("matchID", theMatch.matchId).method(Method.GET).retryOptions(withTaskRetryLimit(0)));
+                    }
+                }
             }
             return;
         } else if (reqURI.equals("/tasks/live_update_stats")) {
@@ -104,6 +113,22 @@ public class GGP_DatabaseServlet extends HttpServlet {
                 throw new RuntimeException(e);
             }            
             return;
+        } else if (reqURI.equals("/tasks/fetch_log")) {
+            String theMatchID = req.getParameter("matchID");
+            String theMatchURL = req.getParameter("matchURL");            
+            String thePlayerName = req.getParameter("playerName");
+            // TODO(schreib): Look this up properly.
+            String thePlayerAddress = "http://76.102.12.84:9149/";
+            String theAuthToken = BaseCryptography.signData(StoredCryptoKeys.loadCryptoKeys("exponentKeys").getCryptoKeys().thePrivateKey, theMatchID);
+            String theData = RemoteResourceLoader.postRawWithTimeout(thePlayerAddress, "( LOGS " + theMatchID + " " + theAuthToken + " )", 2500);
+            if (theData != null && theData.length() > 0) {
+                try {
+                    new MatchLog(thePlayerName, theMatchURL, new JSONObject(theData));
+                } catch (JSONException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            return;            
         }
 
         // Handle requests for browser channel subscriptions.
@@ -148,7 +173,11 @@ public class GGP_DatabaseServlet extends HttpServlet {
         if (reqURI.startsWith("/statistics/")) {
             MatchStatistics.respondWithStats(resp, reqURI.replaceFirst("/statistics/", ""));
             return;
-        }        
+        }
+        if (reqURI.startsWith("/logs/")) {
+            MatchLog.respondWithLog(resp, reqURI.replaceFirst("/logs/", ""));
+            return;
+        }
 
         boolean writeAsBinary = false;
         if (reqURI.endsWith("/")) {

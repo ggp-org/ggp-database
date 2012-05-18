@@ -6,7 +6,7 @@ import java.util.Set;
 
 import javax.jdo.annotations.*;
 
-import com.google.appengine.repackaged.org.json.JSONObject;
+import org.json.JSONObject;
 
 @PersistenceCapable
 public class IntermediateStatistics extends StoredJSON {

@@ -10,10 +10,18 @@ import ggp.database.statistics.statistic.PerRoleStatistic;
 import ggp.database.statistics.statistic.WeightedAverageStatistic;
 
 import com.google.appengine.api.datastore.Entity;
-import com.google.appengine.repackaged.com.google.common.base.Pair;
 
 public class RoleCorrelationWithSkill extends PerGameStatistic<PerRoleStatistic<CounterStatistic.NaiveCounter>> {
     public void updateWithMatch(Entity newMatch) {}
+    
+    class Pair<A, B> {
+        public A first;
+        public B second;
+        public Pair(A first, B second) {
+            this.first = first;
+            this.second = second;
+        }
+    }
     
     public void finalizeComputation(Reader theReader) {
         AgonRank AGON = theReader.getStatistic(AgonRank.class);

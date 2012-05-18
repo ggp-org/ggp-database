@@ -4,8 +4,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.google.appengine.api.datastore.Entity;
-import com.google.appengine.repackaged.org.json.JSONArray;
-import com.google.appengine.repackaged.org.json.JSONException;
+import org.json.JSONArray;
+import org.json.JSONException;
 
 public abstract class PerRoleStatistic<T extends Statistic> extends Statistic {
     private static final String rolePrefix = "role_";

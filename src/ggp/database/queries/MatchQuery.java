@@ -17,9 +17,9 @@ import javax.servlet.http.HttpServletResponse;
 import org.datanucleus.store.appengine.query.JDOCursorHelper;
 
 import com.google.appengine.api.datastore.Cursor;
-import com.google.appengine.repackaged.org.json.JSONArray;
-import com.google.appengine.repackaged.org.json.JSONException;
-import com.google.appengine.repackaged.org.json.JSONObject;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class MatchQuery {
     @SuppressWarnings("unchecked")

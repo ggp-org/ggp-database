@@ -49,8 +49,8 @@ import com.google.appengine.api.datastore.Query;
 import com.google.appengine.api.datastore.QueryResultIterator;
 import com.google.appengine.api.datastore.ReadPolicy;
 
-import com.google.appengine.repackaged.org.json.JSONException;
-import com.google.appengine.repackaged.org.json.JSONObject;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class NewStatisticsComputation implements Statistic.Reader {
     public static void computeBatchStatistics() throws IOException {

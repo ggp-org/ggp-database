@@ -8,8 +8,8 @@ import ggp.database.statistics.statistic.PerPlayerStatistic;
 import ggp.database.statistics.statistic.Statistic;
 
 import com.google.appengine.api.datastore.Entity;
-import com.google.appengine.repackaged.org.json.JSONArray;
-import com.google.appengine.repackaged.org.json.JSONException;
+import org.json.JSONArray;
+import org.json.JSONException;
 
 public class ObservedPlayers extends Statistic {
     private Set<String> thePlayers;

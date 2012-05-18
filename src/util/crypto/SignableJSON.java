@@ -1,14 +1,13 @@
 package util.crypto;
 
-
 import java.io.UnsupportedEncodingException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SignatureException;
 
 import util.crypto.CanonicalJSON.CanonicalizationStrategy;
-import com.google.appengine.repackaged.org.json.JSONException;
-import com.google.appengine.repackaged.org.json.JSONObject;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class SignableJSON {
     // If we need to use a canonicalization strategy that's not SIMPLE,

@@ -7,8 +7,8 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.appengine.api.datastore.Entity;
-import com.google.appengine.repackaged.org.json.JSONException;
-import com.google.appengine.repackaged.org.json.JSONObject;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public abstract class PerGameStatistic<T extends Statistic> extends Statistic {
     private static final String gamePrefix = "game_";

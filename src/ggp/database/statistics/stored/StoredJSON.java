@@ -7,8 +7,8 @@ import javax.jdo.PersistenceManager;
 import javax.jdo.annotations.*;
 
 import com.google.appengine.api.datastore.Text;
-import com.google.appengine.repackaged.org.json.JSONException;
-import com.google.appengine.repackaged.org.json.JSONObject;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 @PersistenceCapable
 @Inheritance(strategy=InheritanceStrategy.SUBCLASS_TABLE)
