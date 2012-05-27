@@ -50,7 +50,7 @@ public class MatchLog {
         JSONObject theResponse = null;
         {
             String[] splitLogURL = theLogURL.split("/");
-            theResponse = loadLogData(splitLogURL[1], splitLogURL[0]);
+            theResponse = loadLogData(splitLogURL[1], "http://matches.ggp.org/matches/" + splitLogURL[0] + "/");
         }
         if (theResponse != null) {
             resp.getWriter().println(theResponse.toString());

@@ -98,7 +98,7 @@ public class GGP_DatabaseServlet extends HttpServlet {
             if (theMatch.isCompleted) {
                 QueueFactory.getQueue("stats").add(withUrl("/tasks/live_update_stats").param("matchURL", theMatchURL).method(Method.GET).retryOptions(withTaskRetryLimit(0)));
                 for (String aPlayer : theMatch.playerNamesFromHost) {
-                    if (aPlayer.equals("CloudKingdom")) {
+                    if (aPlayer.equals("GreenShell")) {
                         QueueFactory.getQueue("stats").add(withUrl("/tasks/fetch_log").param("matchURL", theMatchURL).param("playerName", aPlayer).param("matchID", theMatch.matchId).method(Method.GET).retryOptions(withTaskRetryLimit(0)));
                     }
                 }
@@ -111,19 +111,19 @@ public class GGP_DatabaseServlet extends HttpServlet {
                 NewStatisticsComputation.incrementallyAddMatch(datastore.get(KeyFactory.createKey("CondensedMatch", theMatchURL)));
             } catch (Exception e) {
                 throw new RuntimeException(e);
-            }            
+            }
             return;
         } else if (reqURI.equals("/tasks/fetch_log")) {
             String theMatchID = req.getParameter("matchID");
             String theMatchURL = req.getParameter("matchURL");            
             String thePlayerName = req.getParameter("playerName");
             // TODO(schreib): Look this up properly.
-            String thePlayerAddress = "http://76.102.12.84:9149/";
+            String thePlayerAddress = "http://76.102.12.84:9199/";
             String theAuthToken = BaseCryptography.signData(StoredCryptoKeys.loadCryptoKeys("exponentKeys").getCryptoKeys().thePrivateKey, theMatchID);
-            String theData = RemoteResourceLoader.postRawWithTimeout(thePlayerAddress, "( LOGS " + theMatchID + " " + theAuthToken + " )", 2500);
+            JSONObject theData = RemoteResourceLoader.loadJSON(thePlayerAddress + theMatchID + "," + theAuthToken);
             if (theData != null && theData.length() > 0) {
                 try {
-                    new MatchLog(thePlayerName, theMatchURL, new JSONObject(theData));
+                    new MatchLog(thePlayerName, theMatchURL, theData);
                 } catch (JSONException e) {
                     throw new RuntimeException(e);
                 }
