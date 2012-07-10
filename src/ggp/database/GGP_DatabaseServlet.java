@@ -88,9 +88,9 @@ public class GGP_DatabaseServlet extends HttpServlet {
             } else {
                 resp.setStatus(404);
                 resp.getWriter().close();
-            }            
+            }
             return;
-        } else if (reqURI.equals("/tasks/ingest_match")) {
+        } else if (reqURI.equals("/tasks/ingest_match") || reqURI.equals("/ingest_match")) {
             // Actually ingest a match, in the task queue.
             String theMatchURL = req.getParameter("matchURL");
             JSONObject theMatchJSON = RemoteResourceLoader.loadJSON(theMatchURL);
