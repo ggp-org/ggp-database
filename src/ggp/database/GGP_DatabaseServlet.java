@@ -98,7 +98,7 @@ public class GGP_DatabaseServlet extends HttpServlet {
             if (theMatch.isCompleted) {
                 QueueFactory.getQueue("stats").add(withUrl("/tasks/live_update_stats").param("matchURL", theMatchURL).method(Method.GET).retryOptions(withTaskRetryLimit(0)));
                 for (String aPlayer : theMatch.playerNamesFromHost) {
-                    if (aPlayer.equals("GreenShell")) {
+                    if (aPlayer.equals("GreenShell") || aPlayer.equals("CloudKingdom")) {
                         QueueFactory.getQueue("stats").add(withUrl("/tasks/fetch_log").param("matchURL", theMatchURL).param("playerName", aPlayer).param("matchID", theMatch.matchId).method(Method.GET).retryOptions(withTaskRetryLimit(0)));
                     }
                 }
@@ -117,8 +117,13 @@ public class GGP_DatabaseServlet extends HttpServlet {
             String theMatchID = req.getParameter("matchID");
             String theMatchURL = req.getParameter("matchURL");            
             String thePlayerName = req.getParameter("playerName");
+            
             // TODO(schreib): Look this up properly.
-            String thePlayerAddress = "http://76.102.12.84:9199/";
+            String thePlayerAddress = null;
+            if (thePlayerName.equals("GreenShell")) thePlayerAddress = "http://76.102.12.84:9199/";
+            if (thePlayerName.equals("CloudKingdom")) thePlayerAddress = "http://76.102.12.84:9198/";
+            if (thePlayerAddress == null) return;
+            
             String theAuthToken = BaseCryptography.signData(StoredCryptoKeys.loadCryptoKeys("exponentKeys").getCryptoKeys().thePrivateKey, theMatchID);
             JSONObject theData = RemoteResourceLoader.loadJSON(thePlayerAddress + theMatchID + "," + theAuthToken);
             if (theData != null && theData.length() > 0) {
