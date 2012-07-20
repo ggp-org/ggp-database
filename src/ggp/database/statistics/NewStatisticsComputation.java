@@ -13,6 +13,7 @@ import ggp.database.statistics.statistic.implementation.ComputedAt;
 import ggp.database.statistics.statistic.implementation.DecayedAverageScore;
 import ggp.database.statistics.statistic.implementation.EloRank;
 import ggp.database.statistics.statistic.implementation.AverageScore;
+import ggp.database.statistics.statistic.implementation.LastPlayed;
 import ggp.database.statistics.statistic.implementation.Matches;
 import ggp.database.statistics.statistic.implementation.MatchesAbandoned;
 import ggp.database.statistics.statistic.implementation.MatchesAverageMoves;
@@ -174,6 +175,7 @@ public class NewStatisticsComputation implements Statistic.Reader {
         registeredStatistics.add(new ComputeTime());
         registeredStatistics.add(new DecayedAverageScore());
         registeredStatistics.add(new EloRank());
+        registeredStatistics.add(new LastPlayed());
         registeredStatistics.add(new Matches());
         registeredStatistics.add(new MatchesAbandoned());
         registeredStatistics.add(new MatchesAverageMoves());
