@@ -5,7 +5,6 @@ import static com.google.appengine.api.taskqueue.TaskOptions.Builder.withUrl;
 
 import ggp.database.cron.UpdateOngoing;
 import ggp.database.logs.MatchLog;
-import ggp.database.logs.StoredCryptoKeys;
 import ggp.database.matches.CondensedMatch;
 import ggp.database.notifications.ChannelService;
 import ggp.database.notifications.UpdateRegistry;
@@ -24,7 +23,6 @@ import java.net.URLEncoder;
 import javax.servlet.http.*;
 
 import util.configuration.RemoteResourceLoader;
-import util.crypto.BaseCryptography;
 
 import com.google.appengine.api.capabilities.CapabilitiesService;
 import com.google.appengine.api.capabilities.CapabilitiesServiceFactory;
@@ -124,8 +122,7 @@ public class GGP_DatabaseServlet extends HttpServlet {
             if (thePlayerName.equals("CloudKingdom")) thePlayerAddress = "http://76.102.12.84:9198/";
             if (thePlayerAddress == null) return;
             
-            String theAuthToken = BaseCryptography.signData(StoredCryptoKeys.loadCryptoKeys("exponentKeys").getCryptoKeys().thePrivateKey, theMatchID);
-            JSONObject theData = RemoteResourceLoader.loadJSON(thePlayerAddress + theMatchID + "," + theAuthToken);
+            JSONObject theData = RemoteResourceLoader.loadJSON(thePlayerAddress + theMatchID);
             if (theData != null && theData.length() > 0) {
                 try {
                     new MatchLog(thePlayerName, theMatchURL, theData);
