@@ -19,5 +19,10 @@
     <url>/cron/update_all_ongoing</url>
     <description>Update all matches still listed as "ongoing" every day.</description>
     <schedule>every 24 hours</schedule>
+  </cron>
+  <cron>
+    <url>/cron/generate_player_reports</url>
+    <description>Generate email reports about players for interested users.</description>
+    <schedule>every 24 hours</schedule>
   </cron>  
 </cronentries>

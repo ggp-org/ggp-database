@@ -9,6 +9,7 @@ import ggp.database.matches.CondensedMatch;
 import ggp.database.notifications.ChannelService;
 import ggp.database.notifications.UpdateRegistry;
 import ggp.database.queries.MatchQuery;
+import ggp.database.reports.PlayerReport;
 import ggp.database.statistics.MatchStatistics;
 import ggp.database.statistics.NewStatisticsComputation;
 
@@ -67,6 +68,8 @@ public class GGP_DatabaseServlet extends HttpServlet {
         } else if (reqURI.equals("/cron/update_recent_ongoing")) {
             UpdateOngoing.updateRecentOngoing();
             return;
+        } else if (reqURI.equals("/cron/generate_player_reports")) {
+        	PlayerReport.generateReportFor("GreenShell");
         } else if (req.getRequestURI().equals("/tasks/update_stats")) {
             if (isDatastoreWriteable()) {
                 NewStatisticsComputation.computeBatchStatistics();
