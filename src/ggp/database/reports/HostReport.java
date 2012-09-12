@@ -2,8 +2,10 @@ package ggp.database.reports;
 
 import ggp.database.Persistence;
 import ggp.database.matches.CondensedMatch;
+import ggp.database.statistics.statistic.WeightedAverageStatistic;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -33,7 +35,7 @@ public class HostReport {
 		return theHost;
 	}
 	
-    public static void generateReportFor(String theHost, String toAddress) throws IOException {        
+    public static void generateReportFor(String theHost, Collection<String> toAddresses) throws IOException {        
         StringBuilder queryFilter = new StringBuilder();
         queryFilter.append("hashedMatchHostPK == '" + getHostHashedPK(theHost) + "' && ");
         queryFilter.append("startTime > " + (System.currentTimeMillis() - 604800000L));
@@ -42,23 +44,22 @@ public class HostReport {
         query.setFilter(queryFilter.toString());
         
         int nMatches = 0;
-        int nAbandonedMatches = 0;
         Set<String> distinctGames = new HashSet<String>();
         Set<String> distinctPlayers = new HashSet<String>();
         long latestStartTime = 0;
-        
+        WeightedAverageStatistic.NaiveWeightedAverage playersPerMatch = new WeightedAverageStatistic.NaiveWeightedAverage();
+        WeightedAverageStatistic.NaiveWeightedAverage fractionScrambled = new WeightedAverageStatistic.NaiveWeightedAverage();
+        WeightedAverageStatistic.NaiveWeightedAverage fractionAbandoned = new WeightedAverageStatistic.NaiveWeightedAverage();
+
         try {
             @SuppressWarnings("unchecked")
 			List<CondensedMatch> results = (List<CondensedMatch>) query.execute();
             for (CondensedMatch e : results) {
             	distinctGames.add(e.gameMetaURL);
             	distinctPlayers.addAll(e.playerNamesFromHost);
-            	if (e.startTime > latestStartTime) {
-            		latestStartTime = e.startTime;
-            	}
-            	if (!e.isCompleted && e.startTime < System.currentTimeMillis()-21600000L) {
-            		nAbandonedMatches++;
-            	}
+            	playersPerMatch.addEntry(e.matchRoles, 1.0);
+            	fractionScrambled.addEntry((e.scrambled != null && e.scrambled) ? 1 : 0, 1.0);
+            	fractionAbandoned.addEntry((!e.isCompleted && e.startTime < System.currentTimeMillis()-21600000L) ? 1 : 0, 1.0);
             	nMatches++;
             }
         } finally {
@@ -69,7 +70,9 @@ public class HostReport {
         theMessage.append("Daily activity report for host " + theHost + ", generated on " + new Date() + ".\n");
         theMessage.append("Counts all activity over the past seven days.\n\n");
         theMessage.append("Total matches: " + nMatches + "\n");
-        theMessage.append("Percentage abandoned: " + trimNumber((nAbandonedMatches*1.0/nMatches)*100) + "%\n");
+        theMessage.append("Percentage abandoned: " + trimNumber(fractionAbandoned.getWeightedAverage()*100) + "%\n");
+        theMessage.append("Percentage scrambled: " + trimNumber(fractionScrambled.getWeightedAverage()*100) + "%\n");
+        theMessage.append("Average players/match: " + trimNumber(playersPerMatch.getWeightedAverage()) + "\n");
         theMessage.append("Unique 7DA players: " + distinctPlayers.size() + "\n");
         theMessage.append("Unique 7DA games: " + distinctGames.size() + "\n");
         theMessage.append("Last match started on " + new Date(latestStartTime) + "\n");
@@ -77,17 +80,19 @@ public class HostReport {
         Properties props = new Properties();
         Session session = Session.getDefaultInstance(props, null);
         
-        try {
-            Message msg = new MimeMessage(session);
-            msg.setFrom(new InternetAddress("noreply-reporting@ggp-database.appspotmail.com", "GGP.org Reporting"));
-            msg.addRecipient(Message.RecipientType.TO, new InternetAddress(toAddress));
-            msg.setSubject("GGP.org Daily Report for host " + theHost + " on " + new Date());
-            msg.setText(theMessage.toString());
-            Transport.send(msg);
-        } catch (AddressException e) {
-            throw new RuntimeException(e);
-        } catch (MessagingException e) {
-        	throw new RuntimeException(e);
+        for (String toAddress : toAddresses) {
+	        try {
+	            Message msg = new MimeMessage(session);
+	            msg.setFrom(new InternetAddress("noreply-reporting@ggp-database.appspotmail.com", "GGP.org Reporting"));
+	            msg.addRecipient(Message.RecipientType.TO, new InternetAddress(toAddress));
+	            msg.setSubject("GGP.org Daily Report for host " + theHost + " on " + new Date());
+	            msg.setText(theMessage.toString());
+	            Transport.send(msg);
+	        } catch (AddressException e) {
+	            throw new RuntimeException(e);
+	        } catch (MessagingException e) {
+	        	throw new RuntimeException(e);
+	        }
         }
     }
 }

@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URLEncoder;
+import java.util.Arrays;
 
 import javax.servlet.http.*;
 
@@ -70,9 +71,9 @@ public class GGP_DatabaseServlet extends HttpServlet {
             UpdateOngoing.updateRecentOngoing();
             return;
         } else if (reqURI.equals("/cron/generate_player_reports")) {
-        	HostReport.generateReportFor("Dresden", "action@ggp.org");
-        	HostReport.generateReportFor("Tiltyard", "action@ggp.org");
-        	PlayerReport.generateReportFor("GreenShell", "action@ggp.org");        	
+        	HostReport.generateReportFor("Dresden", Arrays.asList(new String[] {"action@ggp.org"}));
+        	HostReport.generateReportFor("Tiltyard", Arrays.asList(new String[] {"action@ggp.org"}));
+        	PlayerReport.generateReportFor("GreenShell", Arrays.asList(new String[] {"action@ggp.org"}));
         } else if (req.getRequestURI().equals("/tasks/update_stats")) {
             if (isDatastoreWriteable()) {
                 NewStatisticsComputation.computeBatchStatistics();

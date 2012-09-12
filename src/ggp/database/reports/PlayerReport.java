@@ -5,6 +5,7 @@ import ggp.database.matches.CondensedMatch;
 import ggp.database.statistics.statistic.WeightedAverageStatistic;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
@@ -24,7 +25,7 @@ public class PlayerReport {
 		return Math.round(x*100)/100.0;
 	}
 	
-    public static void generateReportFor(String thePlayer, String toAddress) throws IOException {        
+    public static void generateReportFor(String thePlayer, Collection<String> toAddresses) throws IOException {        
         StringBuilder queryFilter = new StringBuilder();
         queryFilter.append("playerNamesFromHost == '" + thePlayer + "' && ");
         queryFilter.append("startTime > " + (System.currentTimeMillis() - 604800000L));
@@ -44,10 +45,10 @@ public class PlayerReport {
             	int nRole = e.playerNamesFromHost.indexOf(thePlayer);
             	if (!e.isCompleted) continue;
             	
-            	if (e.hasErrorsForPlayer.get(nRole)) {
-            		myAvgErrors.addEntry(1.0, 1.0);
-            	} else {
-            		myAvgErrors.addEntry(0.0, 1.0);
+            	boolean hasErrors = e.hasErrorsForPlayer.get(nRole);
+            	myAvgErrors.addEntry(hasErrors ? 1 : 0, 1.0);            	
+            	if (!hasErrors) {
+            		// Some stats are computed only over clean matches.
             		myAvgScore.addEntry(e.goalValues.get(nRole), 1.0);
                 	if (e.startTime > latestCleanStartTime) {
                 		latestCleanStartTime = e.startTime;
@@ -70,17 +71,19 @@ public class PlayerReport {
         Properties props = new Properties();
         Session session = Session.getDefaultInstance(props, null);
         
-        try {
-            Message msg = new MimeMessage(session);
-            msg.setFrom(new InternetAddress("noreply-reporting@ggp-database.appspotmail.com", "GGP.org Reporting"));
-            msg.addRecipient(Message.RecipientType.TO, new InternetAddress(toAddress));
-            msg.setSubject("GGP.org Daily Report for player " + thePlayer + " on " + new Date());
-            msg.setText(theMessage.toString());
-            Transport.send(msg);
-        } catch (AddressException e) {
-            throw new RuntimeException(e);
-        } catch (MessagingException e) {
-        	throw new RuntimeException(e);
+        for (String toAddress : toAddresses) {
+	        try {
+	            Message msg = new MimeMessage(session);
+	            msg.setFrom(new InternetAddress("noreply-reporting@ggp-database.appspotmail.com", "GGP.org Reporting"));
+	            msg.addRecipient(Message.RecipientType.TO, new InternetAddress(toAddress));
+	            msg.setSubject("GGP.org Daily Report for player " + thePlayer + " on " + new Date());
+	            msg.setText(theMessage.toString());
+	            Transport.send(msg);
+	        } catch (AddressException e) {
+	            throw new RuntimeException(e);
+	        } catch (MessagingException e) {
+	        	throw new RuntimeException(e);
+	        }
         }
     }
 }
