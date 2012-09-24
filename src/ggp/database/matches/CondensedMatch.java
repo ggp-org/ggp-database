@@ -340,8 +340,7 @@ public class CondensedMatch {
             }
             return theMatchData;
         } catch (SignatureException se) {
-            // Match not signed: ignore it.
-            throw new IOException("Match not signed!");
+            throw new IOException(se); // Match not signed: ignore it.
         } catch (JSONException je) {
             throw new IOException(je); // Match JSON not valid: ignore it;
         }
