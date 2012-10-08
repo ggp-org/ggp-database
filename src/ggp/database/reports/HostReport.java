@@ -35,7 +35,9 @@ public class HostReport {
 		return theHost;
 	}
 	
-    public static void generateReportFor(String theHost, Collection<String> toAddresses) throws IOException {        
+    public static void generateReportFor(String theHost, Collection<String> toAddresses) throws IOException {
+    	if (toAddresses.size() == 0) return;
+    	
         StringBuilder queryFilter = new StringBuilder();
         queryFilter.append("hashedMatchHostPK == '" + getHostHashedPK(theHost) + "' && ");
         queryFilter.append("startTime > " + (System.currentTimeMillis() - 604800000L));
@@ -60,6 +62,7 @@ public class HostReport {
             	playersPerMatch.addEntry(e.matchRoles, 1.0);
             	fractionScrambled.addEntry((e.scrambled != null && e.scrambled) ? 1 : 0, 1.0);
             	fractionAbandoned.addEntry((!e.isCompleted && e.startTime < System.currentTimeMillis()-21600000L) ? 1 : 0, 1.0);
+            	latestStartTime = Math.max(latestStartTime, e.startTime);
             	nMatches++;
             }
         } finally {

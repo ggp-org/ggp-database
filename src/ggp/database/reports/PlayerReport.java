@@ -25,7 +25,9 @@ public class PlayerReport {
 		return Math.round(x*100)/100.0;
 	}
 	
-    public static void generateReportFor(String thePlayer, Collection<String> toAddresses) throws IOException {        
+    public static void generateReportFor(String thePlayer, Collection<String> toAddresses) throws IOException {
+    	if (toAddresses.size() == 0) return;
+    	
         StringBuilder queryFilter = new StringBuilder();
         queryFilter.append("playerNamesFromHost == '" + thePlayer + "' && ");
         queryFilter.append("startTime > " + (System.currentTimeMillis() - 604800000L));

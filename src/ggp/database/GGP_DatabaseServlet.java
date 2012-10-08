@@ -9,8 +9,7 @@ import ggp.database.matches.CondensedMatch;
 import ggp.database.notifications.ChannelService;
 import ggp.database.notifications.UpdateRegistry;
 import ggp.database.queries.MatchQuery;
-import ggp.database.reports.HostReport;
-import ggp.database.reports.PlayerReport;
+import ggp.database.reports.DailyReport;
 import ggp.database.statistics.MatchStatistics;
 import ggp.database.statistics.NewStatisticsComputation;
 
@@ -21,7 +20,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URLEncoder;
-import java.util.Arrays;
 
 import javax.servlet.http.*;
 
@@ -71,9 +69,10 @@ public class GGP_DatabaseServlet extends HttpServlet {
             UpdateOngoing.updateRecentOngoing();
             return;
         } else if (reqURI.equals("/cron/generate_player_reports")) {
-        	HostReport.generateReportFor("Dresden", Arrays.asList(new String[] {"action@ggp.org"}));
-        	HostReport.generateReportFor("Tiltyard", Arrays.asList(new String[] {"action@ggp.org"}));
-        	PlayerReport.generateReportFor("GreenShell", Arrays.asList(new String[] {"action@ggp.org"}));
+            for (DailyReport theReport : Persistence.loadAll(DailyReport.class)) {
+            	theReport.generateReport();
+            }
+        	return;
         } else if (req.getRequestURI().equals("/tasks/update_stats")) {
             if (isDatastoreWriteable()) {
                 NewStatisticsComputation.computeBatchStatistics();
