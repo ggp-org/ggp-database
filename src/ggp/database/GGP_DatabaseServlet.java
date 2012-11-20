@@ -94,19 +94,33 @@ public class GGP_DatabaseServlet extends HttpServlet {
                 resp.getWriter().close();
             }
             return;
-        } else if (reqURI.equals("/tasks/ingest_match") || reqURI.equals("/ingest_match")) {
-            // Actually ingest a match, in the task queue.
-            String theMatchURL = req.getParameter("matchURL");
-            JSONObject theMatchJSON = RemoteResourceLoader.loadJSON(theMatchURL);
-            CondensedMatch theMatch = CondensedMatch.storeCondensedMatchJSON(theMatchURL, theMatchJSON);
-            if (theMatch.isCompleted) {
-                QueueFactory.getQueue("stats").add(withUrl("/tasks/live_update_stats").param("matchURL", theMatchURL).method(Method.GET).retryOptions(withTaskRetryLimit(0)));
-                for (String aPlayer : theMatch.playerNamesFromHost) {
-                    if (aPlayer.equals("GreenShell") || aPlayer.equals("CloudKingdom")) {
-                        QueueFactory.getQueue("stats").add(withUrl("/tasks/fetch_log").param("matchURL", theMatchURL).param("playerName", aPlayer).param("matchID", theMatch.matchId).method(Method.GET).retryOptions(withTaskRetryLimit(0)));
-                    }
-                }
-            }
+        } else if (reqURI.equals("/ingest_match")) {
+        	QueueFactory.getDefaultQueue().add(withUrl("/tasks/ingest_match").method(Method.GET).param("matchURL", req.getParameter("matchURL")).retryOptions(withTaskRetryLimit(INGESTION_RETRIES)));
+        	return;
+        } else if (reqURI.equals("/tasks/ingest_match")) {
+            // Actually ingest a match, in the task queue.  
+        	try {
+	            String theMatchURL = req.getParameter("matchURL");
+	            JSONObject theMatchJSON = RemoteResourceLoader.loadJSON(theMatchURL);
+	            CondensedMatch theMatch = CondensedMatch.storeCondensedMatchJSON(theMatchURL, theMatchJSON);
+	            if (theMatch.isCompleted) {
+	                QueueFactory.getQueue("stats").add(withUrl("/tasks/live_update_stats").param("matchURL", theMatchURL).method(Method.GET).retryOptions(withTaskRetryLimit(0)));
+	                for (String aPlayer : theMatch.playerNamesFromHost) {
+	                    if (aPlayer.equals("GreenShell") || aPlayer.equals("CloudKingdom")) {
+	                        QueueFactory.getQueue("stats").add(withUrl("/tasks/fetch_log").param("matchURL", theMatchURL).param("playerName", aPlayer).param("matchID", theMatch.matchId).method(Method.GET).retryOptions(withTaskRetryLimit(0)));
+	                    }
+	                }
+	            }	            
+        	} catch (Exception e) {        		
+        		// For the first few exceptions, silently issue errors to task queue to trigger retries.
+        		// After a few retries, start surfacing the exceptions, since they're clearly not transient.
+            	// This reduces the amount of noise in the error logs caused by transient server errors.
+        		resp.setStatus(503);
+        		int nRetryAttempt = Integer.parseInt(req.getHeader("X-AppEngine-TaskRetryCount"));
+            	if (nRetryAttempt > INGESTION_RETRIES - 3) {
+            		throw new RuntimeException(e);
+            	}            	
+        	}
             return;
         } else if (reqURI.equals("/tasks/live_update_stats")) {
             String theMatchURL = req.getParameter("matchURL");
@@ -247,6 +261,7 @@ public class GGP_DatabaseServlet extends HttpServlet {
         in.close();        
     }    
 
+    private static final int INGESTION_RETRIES = 10;
     public void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws IOException {
         resp.setHeader("Access-Control-Allow-Origin", "*");
@@ -269,7 +284,7 @@ public class GGP_DatabaseServlet extends HttpServlet {
             theLink = theLink.substring("<link href=\"http://matches.ggp.org/matches/".length(), theLink.indexOf("\"/>"));
             theLink = "http://matches.ggp.org/matches/" + theLink;
 
-            QueueFactory.getDefaultQueue().add(withUrl("/tasks/ingest_match").method(Method.GET).param("matchURL", theLink).retryOptions(withTaskRetryLimit(6)));
+            QueueFactory.getDefaultQueue().add(withUrl("/tasks/ingest_match").method(Method.GET).param("matchURL", theLink).retryOptions(withTaskRetryLimit(INGESTION_RETRIES)));
 
             resp.setStatus(200);
             resp.getWriter().close();
