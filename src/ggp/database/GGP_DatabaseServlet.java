@@ -36,6 +36,8 @@ import com.google.appengine.api.datastore.KeyFactory;
 import com.google.appengine.api.datastore.ReadPolicy;
 import com.google.appengine.api.taskqueue.QueueFactory;
 import com.google.appengine.api.taskqueue.TaskOptions.Method;
+import com.prodeagle.java.counters.Counter;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -48,6 +50,8 @@ public class GGP_DatabaseServlet extends HttpServlet {
         resp.setHeader("Access-Control-Allow-Headers", "*");
         resp.setHeader("Access-Control-Allow-Age", "86400");
         resp.setStatus(200);
+        
+        Counter.increment("Database.Requests.Get");
         
         String reqURI = req.getRequestURI();
         if (reqURI.equals("/cron/push_subscribe") || reqURI.equals("/push_subscribe")) {
@@ -155,6 +159,7 @@ public class GGP_DatabaseServlet extends HttpServlet {
 
         // Handle requests for browser channel subscriptions.
         if (reqURI.startsWith("/subscribe/")) {
+        	Counter.increment("Database.Requests.Get.Subscribe");
             String theSub = reqURI.replace("/subscribe/", "");
             if (theSub.equals("channel.js")) {
                 // If they're requesting a channel token, we can handle
@@ -189,14 +194,17 @@ public class GGP_DatabaseServlet extends HttpServlet {
         }
 
         if (reqURI.startsWith("/query/")) {
+        	Counter.increment("Database.Requests.Get.Query");
             MatchQuery.respondToQuery(resp, reqURI.replaceFirst("/query/", ""));
             return;
         }
         if (reqURI.startsWith("/statistics/")) {
+        	Counter.increment("Database.Requests.Get.Statistics");
             MatchStatistics.respondWithStats(resp, reqURI.replaceFirst("/statistics/", ""));
             return;
         }
         if (reqURI.startsWith("/logs/")) {
+        	Counter.increment("Database.Requests.Get.Logs");
             MatchLog.respondWithLog(resp, reqURI.replaceFirst("/logs/", ""));
             return;
         }
@@ -268,6 +276,8 @@ public class GGP_DatabaseServlet extends HttpServlet {
         resp.setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
         resp.setHeader("Access-Control-Allow-Headers", "*");
         resp.setHeader("Access-Control-Allow-Age", "86400");
+        
+        Counter.increment("Database.Requests.Post");
         
         if (req.getRequestURI().equals("/ingestion/")) {
             BufferedReader br = new BufferedReader(new InputStreamReader(req.getInputStream()));
