@@ -1,5 +1,10 @@
 package ggp.database.statistics.stored;
 
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.nio.channels.Channels;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
@@ -11,7 +16,14 @@ import ggp.database.statistics.StringCompressor;
 import javax.jdo.PersistenceManager;
 import javax.jdo.annotations.*;
 
+import com.google.appengine.api.blobstore.BlobKey;
+import com.google.appengine.api.blobstore.BlobstoreService;
+import com.google.appengine.api.blobstore.BlobstoreServiceFactory;
 import com.google.appengine.api.datastore.Text;
+import com.google.appengine.api.files.AppEngineFile;
+import com.google.appengine.api.files.FileService;
+import com.google.appengine.api.files.FileServiceFactory;
+import com.google.appengine.api.files.FileWriteChannel;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -22,28 +34,70 @@ import org.json.JSONString;
 @Inheritance(strategy=InheritanceStrategy.SUBCLASS_TABLE)
 public abstract class StoredJSON {
     @PrimaryKey @Persistent private String thePrimaryKey;
+    @Persistent private BlobKey theDataBlob;
     @Persistent private Text theData;
     
     protected StoredJSON(String theKey) {
         thePrimaryKey = theKey;
-        theData = new Text(StringCompressor.compress(new JSONObject().toString()));
+        theDataBlob = null;
+        theData = null;
     }
     
     public String getKey() {
         return thePrimaryKey;
     }
-    
+
     public JSONObject getJSON() {
-        try {
-            return new JSONObject(StringCompressor.decompress(theData.getValue()));
-        } catch (JSONException e) {
-            throw new RuntimeException(e);
-        }        
+    	if (theDataBlob != null) {    		
+    		try {
+    			FileService fileService = FileServiceFactory.getFileService();
+    			String theBlobData = readAsString(new BufferedReader(Channels.newReader(fileService.openReadChannel(fileService.getBlobFile(theDataBlob), false), "UTF8")));
+    			return new JSONObject(StringCompressor.decompress(theBlobData));
+    		} catch (Exception e) {
+    			throw new RuntimeException(e);
+    		}
+    	}
+    	
+    	if (theData != null) {
+	        try {
+	            return new JSONObject(StringCompressor.decompress(theData.getValue()));
+	        } catch (JSONException e) {
+	            throw new RuntimeException(e);
+	        }
+    	}
+    	
+    	return new JSONObject();
     }
     
     public void setJSON(JSONObject theJSON) {
-        theData = new Text(StringCompressor.compress(truncateDoublesForJSON(theJSON)));
-        save();
+    	BlobKey oldBlobKey = theDataBlob;
+    	String theStoredData = StringCompressor.compress(truncateDoublesForJSON(theJSON));
+
+    	if (theStoredData.length() < 100000) {
+    		theData = new Text(theStoredData);
+    		theDataBlob = null;
+    	} else {
+    		theData = null;    		
+	    	try {
+	    		FileService fileService = FileServiceFactory.getFileService();
+	    		AppEngineFile file = fileService.createNewBlobFile("text/plain", thePrimaryKey);
+	    		FileWriteChannel writeChannel = fileService.openWriteChannel(file, true);
+	    		PrintWriter out = new PrintWriter(Channels.newWriter(writeChannel, "UTF8"));
+	    		out.print(StringCompressor.compress(truncateDoublesForJSON(theJSON)));
+	    		out.close();
+	    		writeChannel.closeFinally();
+	    		theDataBlob = fileService.getBlobKey(file);
+	        } catch (Exception e) {
+	    		throw new RuntimeException(e);
+	    	}
+    	}
+    	
+    	save();
+    	
+		if (oldBlobKey != null) {
+			BlobstoreService blobstoreService = BlobstoreServiceFactory.getBlobstoreService();
+			blobstoreService.delete(oldBlobKey);
+		}    	
     }
     
     public void save() {
@@ -140,4 +194,22 @@ public abstract class StoredJSON {
             return null;
         }            
     }
+    
+    static String readAsString(BufferedReader reader) {
+        try {
+            StringBuilder fileData = new StringBuilder(10000);
+            char[] buf = new char[1024];
+            int numRead=0;
+            while((numRead=reader.read(buf)) != -1){
+                fileData.append(buf, 0, numRead);
+            }
+            reader.close();
+            return fileData.toString();
+        } catch (FileNotFoundException e) {
+            return null;
+        } catch (IOException e) {
+			e.printStackTrace();
+			return null;
+		}
+    }    
 }
