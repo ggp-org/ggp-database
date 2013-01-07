@@ -1,9 +1,9 @@
 package ggp.database.statistics.stored;
 
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.nio.channels.Channels;
 import java.util.Collection;
 import java.util.Iterator;
@@ -82,9 +82,9 @@ public abstract class StoredJSON {
 	    		FileService fileService = FileServiceFactory.getFileService();
 	    		AppEngineFile file = fileService.createNewBlobFile("text/plain", thePrimaryKey);
 	    		FileWriteChannel writeChannel = fileService.openWriteChannel(file, true);
-	    		PrintWriter out = new PrintWriter(Channels.newWriter(writeChannel, "UTF8"));
-	    		out.print(StringCompressor.compress(truncateDoublesForJSON(theJSON)));
-	    		out.close();
+	    		BufferedOutputStream bos = new BufferedOutputStream(Channels.newOutputStream(writeChannel), 65536);
+	    		bos.write(StringCompressor.compress(truncateDoublesForJSON(theJSON)).getBytes("UTF8"));
+	    		bos.close();
 	    		writeChannel.closeFinally();
 	    		theDataBlob = fileService.getBlobKey(file);
 	        } catch (Exception e) {
