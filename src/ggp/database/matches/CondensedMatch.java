@@ -1,6 +1,6 @@
 package ggp.database.matches;
 
-import ggp.database.Persistence;
+import org.ggp.shared.persistence.Persistence;
 import ggp.database.notifications.UpdateRegistry;
 
 import java.io.BufferedInputStream;

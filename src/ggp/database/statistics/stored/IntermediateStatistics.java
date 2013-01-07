@@ -1,6 +1,6 @@
 package ggp.database.statistics.stored;
 
-import ggp.database.Persistence;
+import org.ggp.shared.persistence.Persistence;
 
 import java.util.Set;
 

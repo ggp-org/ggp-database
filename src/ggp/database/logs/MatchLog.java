@@ -1,6 +1,6 @@
 package ggp.database.logs;
 
-import ggp.database.Persistence;
+import org.ggp.shared.persistence.Persistence;
 import ggp.database.matches.CondensedMatch;
 import ggp.database.notifications.UpdateRegistry;
 import ggp.database.statistics.StringCompressor;

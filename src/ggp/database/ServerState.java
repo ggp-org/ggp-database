@@ -7,6 +7,8 @@ import java.util.Set;
 import javax.jdo.PersistenceManager;
 import javax.jdo.annotations.*;
 
+import org.ggp.shared.persistence.Persistence;
+
 @PersistenceCapable
 public class ServerState {
     @SuppressWarnings("unused")

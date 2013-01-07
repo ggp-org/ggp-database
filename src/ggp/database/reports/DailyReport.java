@@ -1,6 +1,6 @@
 package ggp.database.reports;
 
-import ggp.database.Persistence;
+import org.ggp.shared.persistence.Persistence;
 
 import java.io.IOException;
 import java.util.HashSet;

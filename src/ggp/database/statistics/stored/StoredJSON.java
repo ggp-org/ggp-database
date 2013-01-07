@@ -10,7 +10,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.TreeSet;
 
-import ggp.database.Persistence;
+import org.ggp.shared.persistence.Persistence;
 import ggp.database.statistics.StringCompressor;
 
 import javax.jdo.PersistenceManager;

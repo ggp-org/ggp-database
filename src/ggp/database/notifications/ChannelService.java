@@ -1,6 +1,6 @@
 package ggp.database.notifications;
 
-import ggp.database.Persistence;
+import org.ggp.shared.persistence.Persistence;
 import ggp.database.matches.CondensedMatch;
 
 import java.io.IOException;
