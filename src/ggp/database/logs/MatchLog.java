@@ -26,9 +26,6 @@ import javax.jdo.PersistenceManager;
 import javax.jdo.annotations.*;
 import javax.servlet.http.HttpServletResponse;
 
-import util.crypto.BaseHashing;
-import util.crypto.SignableJSON;
-
 import com.google.appengine.api.channel.ChannelMessage;
 import com.google.appengine.api.channel.ChannelService;
 import com.google.appengine.api.channel.ChannelServiceFactory;

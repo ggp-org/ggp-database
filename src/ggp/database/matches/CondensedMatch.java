@@ -19,13 +19,13 @@ import java.util.Set;
 import javax.jdo.PersistenceManager;
 import javax.jdo.annotations.*;
 
-import util.crypto.BaseHashing;
-import util.crypto.SignableJSON;
-
 import com.google.appengine.api.channel.ChannelMessage;
 import com.google.appengine.api.channel.ChannelService;
 import com.google.appengine.api.channel.ChannelServiceFactory;
 import com.google.appengine.api.datastore.Text;
+
+import org.ggp.shared.crypto.BaseHashing;
+import org.ggp.shared.crypto.SignableJSON;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;

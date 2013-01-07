@@ -20,8 +20,6 @@ import java.net.URLEncoder;
 
 import javax.servlet.http.*;
 
-import util.configuration.RemoteResourceLoader;
-
 import com.google.appengine.api.capabilities.CapabilitiesService;
 import com.google.appengine.api.capabilities.CapabilitiesServiceFactory;
 import com.google.appengine.api.capabilities.Capability;
@@ -35,6 +33,7 @@ import com.google.appengine.api.taskqueue.QueueFactory;
 import com.google.appengine.api.taskqueue.TaskOptions.Method;
 import com.prodeagle.java.counters.Counter;
 
+import org.ggp.shared.loader.RemoteResourceLoader;
 import org.json.JSONException;
 import org.json.JSONObject;
 
