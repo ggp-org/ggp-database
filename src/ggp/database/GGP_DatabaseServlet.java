@@ -103,19 +103,12 @@ public class GGP_DatabaseServlet extends HttpServlet {
         	QueueFactory.getDefaultQueue().add(withUrl("/tasks/ingest_match").method(Method.GET).param("matchURL", req.getParameter("matchURL")).retryOptions(withTaskRetryLimit(INGESTION_RETRIES)));
         	return;
         } else if (reqURI.equals("/tasks/ingest_match")) {
-            // Actually ingest a match, in the task queue.  
+            // Actually ingest a match, in the task queue.
+        	String theMatchURL = req.getParameter("matchURL");
+        	CondensedMatch theMatch = null;
         	try {
-	            String theMatchURL = req.getParameter("matchURL");
 	            JSONObject theMatchJSON = RemoteResourceLoader.loadJSON(theMatchURL);
-	            CondensedMatch theMatch = CondensedMatch.storeCondensedMatchJSON(theMatchURL, theMatchJSON);
-	            if (theMatch.isCompleted) {
-	                QueueFactory.getQueue("stats").add(withUrl("/tasks/live_update_stats").param("matchURL", theMatchURL).method(Method.GET).retryOptions(withTaskRetryLimit(0)));
-	                for (String aPlayer : theMatch.playerNamesFromHost) {
-	                    if (aPlayer.equals("GreenShell") || aPlayer.equals("CloudKingdom")) {
-	                        QueueFactory.getQueue("stats").add(withUrl("/tasks/fetch_log").param("matchURL", theMatchURL).param("playerName", aPlayer).param("matchID", theMatch.matchId).method(Method.GET).retryOptions(withTaskRetryLimit(0)));
-	                    }
-	                }
-	            }	            
+	            theMatch = CondensedMatch.storeCondensedMatchJSON(theMatchURL, theMatchJSON);
         	} catch (Exception e) {        		
         		// For the first few exceptions, silently issue errors to task queue to trigger retries.
         		// After a few retries, start surfacing the exceptions, since they're clearly not transient.
@@ -124,8 +117,17 @@ public class GGP_DatabaseServlet extends HttpServlet {
         		int nRetryAttempt = Integer.parseInt(req.getHeader("X-AppEngine-TaskRetryCount"));
             	if (nRetryAttempt > INGESTION_RETRIES - 3) {
             		throw new RuntimeException(e);
-            	}            	
+            	}
+            	return;
         	}
+            if (theMatch.isCompleted) {
+                QueueFactory.getQueue("stats").add(withUrl("/tasks/live_update_stats").param("matchURL", theMatchURL).method(Method.GET).retryOptions(withTaskRetryLimit(0)));
+                for (String aPlayer : theMatch.playerNamesFromHost) {
+                	if (!aPlayer.toLowerCase().equals("random")) {
+                		QueueFactory.getDefaultQueue().add(withUrl("/tasks/fetch_log").param("matchURL", theMatchURL).param("playerName", aPlayer).param("matchID", theMatch.matchId).method(Method.GET).retryOptions(withTaskRetryLimit(FETCH_LOG_RETRIES)));
+                	}
+                }
+            }        	
             return;
         } else if (reqURI.equals("/tasks/live_update_stats")) {
             String theMatchURL = req.getParameter("matchURL");
@@ -141,13 +143,46 @@ public class GGP_DatabaseServlet extends HttpServlet {
             String theMatchURL = req.getParameter("matchURL");            
             String thePlayerName = req.getParameter("playerName");
             
-            // TODO(schreib): Look this up properly.
-            String thePlayerAddress = null;
-            if (thePlayerName.equals("GreenShell")) thePlayerAddress = "http://76.102.12.84:9199/";
-            if (thePlayerName.equals("CloudKingdom")) thePlayerAddress = "http://76.102.12.84:9198/";
-            if (thePlayerAddress == null) return;
-            
-            JSONObject theData = RemoteResourceLoader.loadJSON(thePlayerAddress + theMatchID);
+            JSONObject theMatchJSON = null;
+        	try {        		
+	            theMatchJSON = RemoteResourceLoader.loadJSON("http://tiltyard.ggp.org/data/players/" + thePlayerName);
+        	} catch (Exception e) {        		
+        		// For the first few exceptions, silently issue errors to task queue to trigger retries.
+        		// After a few retries, start surfacing the exceptions, since they're clearly not transient.
+            	// This reduces the amount of noise in the error logs caused by transient server errors.
+        		resp.setStatus(503);
+        		int nRetryAttempt = Integer.parseInt(req.getHeader("X-AppEngine-TaskRetryCount"));
+            	if (nRetryAttempt > FETCH_LOG_RETRIES - 3) {
+            		throw new RuntimeException(e);
+            	}
+            	return;
+        	}
+        	
+        	String thePlayerAddress = null;
+        	try {
+        		if (!theMatchJSON.has("exponentURL") || theMatchJSON.getString("exponentURL").isEmpty()) {
+        			return;
+        		}
+        		thePlayerAddress = theMatchJSON.getString("exponentURL");        		
+        	} catch (JSONException j) {
+        		throw new RuntimeException(j);
+        	}
+        	
+            JSONObject theData = null;
+        	try {
+        		theData = RemoteResourceLoader.loadJSON("http://" + thePlayerAddress + "/" + theMatchID);
+        	} catch (Exception e) {        		
+        		// For the first few exceptions, silently issue errors to task queue to trigger retries.
+        		// After a few retries, start surfacing the exceptions, since they're clearly not transient.
+            	// This reduces the amount of noise in the error logs caused by transient server errors.
+        		resp.setStatus(503);
+        		int nRetryAttempt = Integer.parseInt(req.getHeader("X-AppEngine-TaskRetryCount"));
+            	if (nRetryAttempt > FETCH_LOG_RETRIES - 3) {
+            		throw new RuntimeException(e);
+            	}
+            	return;
+        	}
+        	
             if (theData != null && theData.length() > 0) {
                 try {
                     new MatchLog(thePlayerName, theMatchURL, theData);
@@ -155,6 +190,7 @@ public class GGP_DatabaseServlet extends HttpServlet {
                     throw new RuntimeException(e);
                 }
             }
+        	
             return;            
         }
 
@@ -213,6 +249,7 @@ public class GGP_DatabaseServlet extends HttpServlet {
         resp.setStatus(404);
     }
     
+    private static final int FETCH_LOG_RETRIES = 10;
     private static final int INGESTION_RETRIES = 10;
     public void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws IOException {
