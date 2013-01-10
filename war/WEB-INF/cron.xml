@@ -24,5 +24,10 @@
     <url>/cron/generate_player_reports</url>
     <description>Generate email reports about players for interested users.</description>
     <schedule>every 24 hours</schedule>
+  </cron>
+  <cron>
+    <url>/cron/cleanup_old_blobs</url>
+    <description>Clean up old orphaned blobs.</description>
+    <schedule>every 24 hours</schedule>
   </cron>  
 </cronentries>
