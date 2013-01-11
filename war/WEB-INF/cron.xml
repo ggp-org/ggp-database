@@ -28,6 +28,6 @@
   <cron>
     <url>/cron/cleanup_old_blobs</url>
     <description>Clean up old orphaned blobs.</description>
-    <schedule>every 24 hours</schedule>
+    <schedule>every 1 hours</schedule>
   </cron>  
 </cronentries>

@@ -1,27 +1,37 @@
 package ggp.database.cron;
 
-import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import com.google.appengine.api.blobstore.BlobInfo;
 import com.google.appengine.api.blobstore.BlobInfoFactory;
 import com.google.appengine.api.blobstore.BlobKey;
-import com.google.appengine.api.blobstore.BlobstoreService;
 import com.google.appengine.api.blobstore.BlobstoreServiceFactory;
 
 public class CleanupOldBlobs {
 	public static void cleanupOldBlobs() {	    
-	    List<BlobKey> blobsToDelete = new LinkedList<BlobKey>(); 
-	    Iterator<BlobInfo> iterator = new BlobInfoFactory().queryBlobInfos();;
-	    while(iterator.hasNext()){	    	
+	    Iterator<BlobInfo> iterator = new BlobInfoFactory().queryBlobInfos();
+	    Map<String,BlobInfo> latestBlobs = new HashMap<String,BlobInfo>();
+	    Set<BlobInfo> allTheBlobs = new HashSet<BlobInfo>();
+	    while(iterator.hasNext()){
 	    	BlobInfo blob = iterator.next();
-	    	if (new Date().getTime() - blob.getCreation().getTime() > 129600000) {
-	    		blobsToDelete.add(blob.getBlobKey());
+	    	String filename = blob.getFilename();
+	    	if (!latestBlobs.containsKey(filename)) {
+	    		latestBlobs.put(filename, blob);
+	    	} else if (blob.getCreation().after(latestBlobs.get(filename).getCreation())) {
+	    		latestBlobs.put(filename, blob);
+	    	}
+	    	allTheBlobs.add(blob);	    
+	    }
+	    Set<BlobKey> orphanedBlobKeys = new HashSet<BlobKey>();
+	    for (BlobInfo blob : allTheBlobs) {
+	    	if (!latestBlobs.values().contains(blob)) {
+	    		orphanedBlobKeys.add(blob.getBlobKey());
 	    	}
 	    }
-	    BlobstoreService blobstoreService = BlobstoreServiceFactory.getBlobstoreService();
-	    blobstoreService.delete(blobsToDelete.toArray(new BlobKey[]{}));
+	    BlobstoreServiceFactory.getBlobstoreService().delete(orphanedBlobKeys.toArray(new BlobKey[]{}));
 	}
 }
