@@ -34,8 +34,8 @@ import com.google.appengine.api.taskqueue.QueueFactory;
 import com.google.appengine.api.taskqueue.TaskOptions.Method;
 import com.prodeagle.java.counters.Counter;
 
-import org.ggp.shared.loader.RemoteResourceLoader;
-import org.ggp.shared.persistence.Persistence;
+import org.ggp.galaxy.shared.loader.RemoteResourceLoader;
+import org.ggp.galaxy.shared.persistence.Persistence;
 import org.json.JSONException;
 import org.json.JSONObject;
 

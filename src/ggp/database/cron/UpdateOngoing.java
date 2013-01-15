@@ -2,7 +2,7 @@ package ggp.database.cron;
 
 import static com.google.appengine.api.taskqueue.RetryOptions.Builder.withTaskRetryLimit;
 import static com.google.appengine.api.taskqueue.TaskOptions.Builder.withUrl;
-import org.ggp.shared.persistence.Persistence;
+import org.ggp.galaxy.shared.persistence.Persistence;
 import ggp.database.matches.CondensedMatch;
 
 import java.io.IOException;

@@ -1,7 +1,7 @@
 package ggp.database.notifications;
 
 import ggp.database.matches.CondensedMatch;
-import org.ggp.shared.persistence.Persistence;
+import org.ggp.galaxy.shared.persistence.Persistence;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;

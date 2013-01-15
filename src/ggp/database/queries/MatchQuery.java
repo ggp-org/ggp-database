@@ -1,6 +1,6 @@
 package ggp.database.queries;
 
-import org.ggp.shared.persistence.Persistence;
+import org.ggp.galaxy.shared.persistence.Persistence;
 import ggp.database.matches.CondensedMatch;
 
 import java.io.IOException;

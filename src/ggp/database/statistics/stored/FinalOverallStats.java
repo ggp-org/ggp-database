@@ -1,6 +1,6 @@
 package ggp.database.statistics.stored;
 
-import org.ggp.shared.persistence.Persistence;
+import org.ggp.galaxy.shared.persistence.Persistence;
 
 import javax.jdo.annotations.PersistenceCapable;
 
