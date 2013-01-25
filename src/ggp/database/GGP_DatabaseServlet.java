@@ -12,7 +12,7 @@ import ggp.database.notifications.UpdateRegistry;
 import ggp.database.queries.MatchQuery;
 import ggp.database.reports.DailyReport;
 import ggp.database.statistics.MatchStatistics;
-import ggp.database.statistics.NewStatisticsComputation;
+import ggp.database.statistics.StatisticsComputation;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -80,7 +80,7 @@ public class GGP_DatabaseServlet extends HttpServlet {
         	return;
         } else if (req.getRequestURI().equals("/tasks/update_stats")) {
             if (isDatastoreWriteable()) {
-                NewStatisticsComputation.computeBatchStatistics();
+                StatisticsComputation.computeBatchStatistics();
             }
             return;
         }     
@@ -123,7 +123,7 @@ public class GGP_DatabaseServlet extends HttpServlet {
             if (theMatch.isCompleted) {
                 QueueFactory.getQueue("stats").add(withUrl("/tasks/live_update_stats").param("matchURL", theMatchURL).method(Method.GET).retryOptions(withTaskRetryLimit(0)));
                 for (String aPlayer : theMatch.playerNamesFromHost) {
-                	if (!aPlayer.toLowerCase().equals("random")) {
+                	if (!aPlayer.isEmpty() && !aPlayer.toLowerCase().equals("random")) {
                 		QueueFactory.getDefaultQueue().add(withUrl("/tasks/fetch_log").param("matchURL", theMatchURL).param("playerName", aPlayer).param("matchID", theMatch.matchId).method(Method.GET).retryOptions(withTaskRetryLimit(FETCH_LOG_RETRIES)));
                 	}
                 }
@@ -133,7 +133,7 @@ public class GGP_DatabaseServlet extends HttpServlet {
             String theMatchURL = req.getParameter("matchURL");
             DatastoreService datastore = DatastoreServiceFactory.getDatastoreService(DatastoreServiceConfig.Builder.withReadPolicy(new ReadPolicy(ReadPolicy.Consistency.EVENTUAL)));
             try {
-                NewStatisticsComputation.incrementallyAddMatch(datastore.get(KeyFactory.createKey("CondensedMatch", theMatchURL)));
+                StatisticsComputation.incrementallyAddMatch(datastore.get(KeyFactory.createKey("CondensedMatch", theMatchURL)));
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }

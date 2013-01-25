@@ -334,7 +334,9 @@ public class CondensedMatch {
                 }
                 if (theMatchData.playerNamesFromHost != null) {
                     for (String playerName : theMatchData.playerNamesFromHost) {
-                        UpdateRegistry.pingClients("query/filterPlayer,recent," + theMatchData.hashedMatchHostPK + "," + playerName);
+                    	if (!playerName.isEmpty()) {
+                    		UpdateRegistry.pingClients("query/filterPlayer,recent," + theMatchData.hashedMatchHostPK + "," + playerName);
+                    	}
                     }
                 }
             }

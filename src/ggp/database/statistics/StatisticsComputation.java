@@ -53,11 +53,11 @@ import com.google.appengine.api.datastore.ReadPolicy;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class NewStatisticsComputation implements Statistic.Reader {
+public class StatisticsComputation implements Statistic.Reader {
     public static void computeBatchStatistics() throws IOException {
-        Map<String, NewStatisticsComputation> statsForLabel = new HashMap<String, NewStatisticsComputation>();
-        statsForLabel.put("all", new NewStatisticsComputation());
-        statsForLabel.put("unsigned", new NewStatisticsComputation());
+        Map<String, StatisticsComputation> statsForLabel = new HashMap<String, StatisticsComputation>();
+        statsForLabel.put("all", new StatisticsComputation());
+        statsForLabel.put("unsigned", new StatisticsComputation());
         
         long nComputeBeganAt = System.currentTimeMillis();
         {
@@ -108,9 +108,9 @@ public class NewStatisticsComputation implements Statistic.Reader {
     public static void incrementallyAddMatch(Entity newMatch) {
         // Load the stored set of statistics computations.
         Set<String> labelsToFetch = getLabelsForMatch(newMatch);
-        Map<String, NewStatisticsComputation> statsForLabel = new HashMap<String, NewStatisticsComputation>();
+        Map<String, StatisticsComputation> statsForLabel = new HashMap<String, StatisticsComputation>();
         for (String labelToFetch : labelsToFetch) {
-            NewStatisticsComputation r = new NewStatisticsComputation();
+            StatisticsComputation r = new StatisticsComputation();
             r.restoreFrom(IntermediateStatistics.loadIntermediateStatistics(labelToFetch));
             statsForLabel.put(labelToFetch, r);
             System.gc();
@@ -144,10 +144,10 @@ public class NewStatisticsComputation implements Statistic.Reader {
         return theLabels;
     }
 
-    private static void addAdditionalMatch(Map<String, NewStatisticsComputation> statsForLabel, Entity match) {
+    private static void addAdditionalMatch(Map<String, StatisticsComputation> statsForLabel, Entity match) {
         for (String aLabel : getLabelsForMatch(match)) {
             if (!statsForLabel.containsKey(aLabel)) {
-                statsForLabel.put(aLabel, new NewStatisticsComputation());
+                statsForLabel.put(aLabel, new StatisticsComputation());
             }
             statsForLabel.get(aLabel).add(match);
         }
@@ -157,7 +157,7 @@ public class NewStatisticsComputation implements Statistic.Reader {
     private Set<String> alteredPlayers;
     private Set<String> alteredGames;
     
-    public NewStatisticsComputation () {
+    public StatisticsComputation () {
         alteredGames = new HashSet<String>();
         alteredPlayers = new HashSet<String>();
         registeredStatistics = new HashSet<Statistic>();

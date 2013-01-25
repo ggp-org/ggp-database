@@ -68,6 +68,7 @@ public class HostReport {
         } finally {
             query.closeAll();
         }
+        distinctPlayers.remove("");
         
         StringBuilder theMessage = new StringBuilder();
         theMessage.append("Daily activity report for host " + theHost + ", generated on " + new Date() + ".\n");

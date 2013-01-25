@@ -69,7 +69,9 @@ public abstract class PerPlayerStatistic<T extends Statistic> extends Statistic 
         
         List<String> thePlayerNames = (List<String>)newMatch.getProperty("playerNamesFromHost");
         for (int i = 0; i < thePlayerNames.size(); i++) {
-            playerNames.add(thePlayerNames.get(i));
+        	if (!thePlayerNames.get(i).isEmpty()) {
+        		playerNames.add(thePlayerNames.get(i));
+        	}
         }
         return playerNames;
     }

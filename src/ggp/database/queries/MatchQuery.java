@@ -37,7 +37,7 @@ public class MatchQuery {
                 return;
             }
             
-            if (theVerb.length() == 0 || theDomain.length() == 0 || theHost.length() == 0) {
+            if (theVerb.isEmpty() || theDomain.isEmpty() || theHost.isEmpty()) {
                 resp.setStatus(404);
                 return;
             }
@@ -45,14 +45,14 @@ public class MatchQuery {
             String queryFilter = "";
             if (theVerb.equals("filterPlayer")) {
                 String thePlayer = theSplitParams.pop();
-                if (thePlayer.length() == 0) {
+                if (thePlayer.isEmpty()) {
                     resp.setStatus(404);
                     return;
                 }
                 queryFilter += "playerNamesFromHost == '" + thePlayer + "'";
             } else if (theVerb.equals("filterGame")) {
                 String theGame = theSplitParams.pop();
-                if (theGame.length() == 0) {
+                if (theGame.isEmpty()) {
                     resp.setStatus(404);
                     return;
                 }
