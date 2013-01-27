@@ -58,6 +58,7 @@ public class CondensedMatch {
     @Persistent @Extension(vendorName = "datanucleus", key = "gae.unindexed", value="true") public List<Integer> goalValues;
     @Persistent @Extension(vendorName = "datanucleus", key = "gae.unindexed", value="true") public List<Boolean> allErrorsForPlayer;
     @Persistent @Extension(vendorName = "datanucleus", key = "gae.unindexed", value="true") public List<Boolean> hasErrorsForPlayer;
+    @Persistent @Extension(vendorName = "datanucleus", key = "gae.unindexed", value="true") public List<Boolean> isPlayerHuman;
 
     static class SignatureException extends Exception {
         private static final long serialVersionUID = 1L;
@@ -139,6 +140,9 @@ public class CondensedMatch {
         if (theMatchJSON.has("hasErrorsForPlayer")) {
             this.hasErrorsForPlayer = convertToList(theMatchJSON.getJSONArray("hasErrorsForPlayer"));
         }
+        if (theMatchJSON.has("isPlayerHuman")) {
+        	this.isPlayerHuman = convertToList(theMatchJSON.getJSONArray("isPlayerHuman"));
+        }
         
         // When the match is completed, we can phase out the channel registrations:
         // move them from persistent storage to an in-memory variable, so that we can still
@@ -179,11 +183,14 @@ public class CondensedMatch {
            if (playerNamesFromHost.size() > 0) {
              theMatch.put("playerNamesFromHost", playerNamesFromHost);
            }
+           if (isPlayerHuman.size() > 0) {
+        	 theMatch.put("isPlayerHuman", isPlayerHuman);
+           }
            theMatch.put("allErrorsForPlayer", allErrorsForPlayer);
            theMatch.put("hasErrorsForPlayer", hasErrorsForPlayer);
            if (goalValues.size() > 0) {
              theMatch.put("goalValues", goalValues);
-           }           
+           }
 
            return theMatch;
         } catch (JSONException e) {
