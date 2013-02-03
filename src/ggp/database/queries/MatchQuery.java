@@ -1,6 +1,8 @@
 package ggp.database.queries;
 
 import org.ggp.galaxy.shared.persistence.Persistence;
+
+import ggp.database.logs.MatchLog;
 import ggp.database.matches.CondensedMatch;
 
 import java.io.IOException;
@@ -25,7 +27,9 @@ public class MatchQuery {
     @SuppressWarnings("unchecked")
     public static void respondToQuery(HttpServletResponse resp, String theRPC) throws IOException {
         JSONObject theResponse = null;
-        if (theRPC.startsWith("filter")) {
+        if (theRPC.startsWith("filterLog")) {
+        	theResponse = runLogQuery(resp, theRPC);
+        } else if (theRPC.startsWith("filter")) {
             Deque<String> theSplitParams = new ArrayDeque<String>(Arrays.asList(theRPC.split(",")));
             String theVerb, theDomain, theHost;
             try {
@@ -122,5 +126,39 @@ public class MatchQuery {
         } else {
             resp.setStatus(404);
         }
+    }
+    
+    public static JSONObject runLogQuery(HttpServletResponse resp, String theRPC) throws IOException {        
+        Deque<String> theSplitParams = new ArrayDeque<String>(Arrays.asList(theRPC.split(",")));
+        theSplitParams.pop();
+        String theMatchURL = theSplitParams.pop();
+        
+        Query query = Persistence.getPersistenceManager().newQuery(MatchLog.class);
+        String queryFilter = "matchURL == '" + theMatchURL + "'";
+        query.setFilter(queryFilter);
+                
+        JSONArray theArray = new JSONArray();
+        try {
+            @SuppressWarnings("unchecked")
+			List<MatchLog> results = (List<MatchLog>) query.execute();
+            if (!results.isEmpty()) {
+                for (MatchLog e : results) {
+                	theArray.put(e.playerName);
+                }
+            } else {
+                // ... no results ...
+            }
+        } finally {
+            query.closeAll();
+        }
+        
+        JSONObject theResponse = null;
+        try {
+            theResponse = new JSONObject();
+            theResponse.put("playerLogs", theArray);
+        } catch (JSONException je) {
+            ;
+        }
+        return theResponse;
     }
 }
