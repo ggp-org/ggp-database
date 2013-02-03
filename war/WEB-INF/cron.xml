@@ -2,22 +2,23 @@
 <cronentries>
   <cron>
     <url>/cron/push_subscribe</url>
-    <description>Renew the PuSH subscription to completed matches every two days.</description>
+    <description>Renew the PuSH subscription to completed matches.</description>
     <schedule>every 48 hours</schedule>
   </cron>
   <cron>
     <url>/cron/update_stats</url>
-    <description>Update the server statistics in batch every day.</description>
-    <schedule>every 24 hours</schedule>
+    <description>Update the server statistics in batch.</description>
+    <schedule>every 8 hours</schedule>
+    <target>stats</target>
   </cron>
   <cron>
     <url>/cron/update_recent_ongoing</url>
-    <description>Update recent matches still listed as "ongoing" every half hour.</description>
+    <description>Update recent matches still listed as "ongoing".</description>
     <schedule>every 30 minutes</schedule>
   </cron>
   <cron>
     <url>/cron/update_all_ongoing</url>
-    <description>Update all matches still listed as "ongoing" every day.</description>
+    <description>Update all matches still listed as "ongoing".</description>
     <schedule>every 24 hours</schedule>
   </cron>
   <cron>

@@ -21,6 +21,7 @@ import java.net.URLEncoder;
 
 import javax.servlet.http.*;
 
+import com.google.appengine.api.backends.BackendServiceFactory;
 import com.google.appengine.api.capabilities.CapabilitiesService;
 import com.google.appengine.api.capabilities.CapabilitiesServiceFactory;
 import com.google.appengine.api.capabilities.Capability;
@@ -62,7 +63,7 @@ public class GGP_DatabaseServlet extends HttpServlet {
             resp.getWriter().println("PuSH subscription sent.");            
             return;
         } else if (req.getRequestURI().equals("/cron/update_stats") || req.getRequestURI().equals("/update_stats")) {
-            QueueFactory.getDefaultQueue().add(withUrl("/tasks/update_stats").method(Method.GET).retryOptions(withTaskRetryLimit(0)));
+            QueueFactory.getDefaultQueue().add(withUrl("/tasks/update_stats").method(Method.GET).header("Host", BackendServiceFactory.getBackendService().getBackendAddress("stats", 0)).retryOptions(withTaskRetryLimit(0)));
             return;
         } else if (reqURI.equals("/cron/update_all_ongoing") || reqURI.equals("/update_ongoing")) {
             UpdateOngoing.updateAllOngoing();
@@ -121,7 +122,7 @@ public class GGP_DatabaseServlet extends HttpServlet {
             	return;
         	}
             if (theMatch.isCompleted) {
-                QueueFactory.getQueue("stats").add(withUrl("/tasks/live_update_stats").param("matchURL", theMatchURL).method(Method.GET).retryOptions(withTaskRetryLimit(0)));
+                //QueueFactory.getQueue("stats").add(withUrl("/tasks/live_update_stats").param("matchURL", theMatchURL).method(Method.GET).retryOptions(withTaskRetryLimit(0)));
                 for (String aPlayer : theMatch.playerNamesFromHost) {
                 	if (!aPlayer.isEmpty() && !aPlayer.toLowerCase().equals("random")) {
                 		QueueFactory.getDefaultQueue().add(withUrl("/tasks/fetch_log").param("matchURL", theMatchURL).param("playerName", aPlayer).param("matchID", theMatch.matchId).method(Method.GET).retryOptions(withTaskRetryLimit(FETCH_LOG_RETRIES)));
