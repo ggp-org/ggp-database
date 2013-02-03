@@ -18,6 +18,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URLEncoder;
+import java.util.logging.Logger;
 
 import javax.servlet.http.*;
 
@@ -58,10 +59,22 @@ public class GGP_DatabaseServlet extends HttpServlet {
             ss.rotateValidationToken();
             ss.save();
             String theCallbackURL = URLEncoder.encode("http://database.ggp.org/ingestion/", "UTF-8");
-            String theFeedURL = URLEncoder.encode("http://matches.ggp.org/matches/feeds/updatedFeed.atom", "UTF-8");                                    
-            RemoteResourceLoader.postRawWithTimeout("http://pubsubhubbub.appspot.com/", "hub.callback=" + theCallbackURL + "&hub.mode=subscribe&hub.topic=" + theFeedURL + "&hub.verify=sync&hub.verify_token=" + ss.getValidationToken(), 5000);
-            resp.getWriter().println("PuSH subscription sent.");            
-            return;
+            String theFeedURL = URLEncoder.encode("http://matches.ggp.org/matches/feeds/updatedFeed.atom", "UTF-8");
+            int nAttempt = 0;
+            while (true) {
+	            try {
+	            	RemoteResourceLoader.postRawWithTimeout("http://pubsubhubbub.appspot.com/", "hub.callback=" + theCallbackURL + "&hub.mode=subscribe&hub.topic=" + theFeedURL + "&hub.verify=sync&hub.verify_token=" + ss.getValidationToken(), 5000);
+	                resp.getWriter().println("PuSH subscription sent.");            
+	                return;
+	            } catch (IOException ie) {
+	            	if (nAttempt > 5) {
+	            		Logger.getAnonymousLogger().severe("Caught exception while subscribing to PuSH: " + ie);
+	            	} else if (nAttempt > 8) {
+	            		throw new RuntimeException(ie);
+	            	}
+	            }
+	            nAttempt++;
+            }
         } else if (req.getRequestURI().equals("/cron/update_stats") || req.getRequestURI().equals("/update_stats")) {
             QueueFactory.getDefaultQueue().add(withUrl("/tasks/update_stats").method(Method.GET).header("Host", BackendServiceFactory.getBackendService().getBackendAddress("stats", 0)).retryOptions(withTaskRetryLimit(0)));
             return;
