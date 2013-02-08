@@ -48,6 +48,7 @@ public class CondensedMatch {
     @Persistent public boolean allErrors;
     @Persistent public boolean allErrorsForSomePlayer;
     @Persistent public boolean isCompleted;
+    @Persistent public Boolean isAborted;
     @Persistent public String gameMetaURL;
     @Persistent public String tournamentNameFromHost;
     @Persistent public Boolean scrambled;
@@ -116,6 +117,9 @@ public class CondensedMatch {
         }
         this.isCompleted = theMatchJSON.getBoolean("isCompleted");
         this.gameMetaURL = theMatchJSON.getString("gameMetaURL");
+        if (theMatchJSON.has("isAborted")) {
+        	this.isAborted = theMatchJSON.getBoolean("isAborted");
+        }
         
         if (theMatchJSON.has("tournamentNameFromHost")) {
             this.tournamentNameFromHost = theMatchJSON.getString("tournamentNameFromHost");
@@ -147,10 +151,14 @@ public class CondensedMatch {
         // When the match is completed, we can phase out the channel registrations:
         // move them from persistent storage to an in-memory variable, so that we can still
         // notify subscribers about the last update.
-        if (isCompleted) {
+        if (isCompleted || getIsAborted()) {
             tempClientIDs = theClientIDs;
             this.theClientIDs = null;
         }
+    }
+    
+    private boolean getIsAborted() {
+    	return isAborted != null && isAborted.booleanValue();
     }
     
     public JSONObject getMatchJSON() {
@@ -177,6 +185,9 @@ public class CondensedMatch {
            theMatch.put("weight", weight);
            if (lastUpdated != null) {
              theMatch.put("lastUpdated", lastUpdated.getTime());
+           }
+           if (isAborted != null) {
+        	 theMatch.put("isAborted", isAborted);
            }
 
            // per-role values
@@ -293,6 +304,7 @@ public class CondensedMatch {
     
     public boolean addClientID(String clientID) {
         if (isCompleted) return false;
+        if (getIsAborted()) return false;
         if (theClientIDs == null) theClientIDs = new HashSet<String>();
         theClientIDs.add(clientID);
         return true;
@@ -326,9 +338,9 @@ public class CondensedMatch {
             if (theMatchData == null) {
                 theMatchData = new CondensedMatch(matchURL, theMatchJSON);
             } else {
-                changedActiveSet = !theMatchData.isCompleted;
+                changedActiveSet = !theMatchData.isCompleted && !theMatchData.getIsAborted();
                 theMatchData.setMatchJSON(theMatchJSON);
-                if (!theMatchData.isCompleted) changedActiveSet = false;
+                if (!theMatchData.isCompleted && !theMatchData.getIsAborted()) changedActiveSet = false;
             }
             theMatchData.save();
             // TODO: handle pings in a separate task queue?
