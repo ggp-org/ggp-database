@@ -52,6 +52,7 @@ public class HostReport {
         WeightedAverageStatistic.NaiveWeightedAverage playersPerMatch = new WeightedAverageStatistic.NaiveWeightedAverage();
         WeightedAverageStatistic.NaiveWeightedAverage fractionScrambled = new WeightedAverageStatistic.NaiveWeightedAverage();
         WeightedAverageStatistic.NaiveWeightedAverage fractionAbandoned = new WeightedAverageStatistic.NaiveWeightedAverage();
+        WeightedAverageStatistic.NaiveWeightedAverage fractionAborted = new WeightedAverageStatistic.NaiveWeightedAverage();
 
         try {
             @SuppressWarnings("unchecked")
@@ -61,7 +62,8 @@ public class HostReport {
             	distinctPlayers.addAll(e.playerNamesFromHost);
             	playersPerMatch.addEntry(e.matchRoles, 1.0);
             	fractionScrambled.addEntry((e.scrambled != null && e.scrambled) ? 1 : 0, 1.0);
-            	fractionAbandoned.addEntry((!e.isCompleted && e.startTime < System.currentTimeMillis()-21600000L) ? 1 : 0, 1.0);
+            	fractionAbandoned.addEntry((!e.isCompleted && (e.isAborted == null || !e.isAborted) && e.startTime < System.currentTimeMillis()-21600000L) ? 1 : 0, 1.0);
+            	fractionAborted.addEntry((e.isAborted != null && e.isAborted) ? 1 : 0, 1.0);
             	latestStartTime = Math.max(latestStartTime, e.startTime);
             	nMatches++;
             }
@@ -75,7 +77,8 @@ public class HostReport {
         theMessage.append("Counts all activity over the past seven days.\n\n");
         theMessage.append("Total matches: " + nMatches + "\n");
         theMessage.append("Percentage abandoned: " + trimNumber(fractionAbandoned.getWeightedAverage()*100) + "%\n");
-        theMessage.append("Percentage scrambled: " + trimNumber(fractionScrambled.getWeightedAverage()*100) + "%\n");
+        theMessage.append("Percentage aborted: " + trimNumber(fractionAborted.getWeightedAverage()*100) + "%\n");
+        theMessage.append("Percentage scrambled: " + trimNumber(fractionScrambled.getWeightedAverage()*100) + "%\n");        
         theMessage.append("Average players/match: " + trimNumber(playersPerMatch.getWeightedAverage()) + "\n");
         theMessage.append("Unique 7DA players: " + distinctPlayers.size() + "\n");
         theMessage.append("Unique 7DA games: " + distinctGames.size() + "\n");
