@@ -134,7 +134,7 @@ public class GGP_DatabaseServlet extends HttpServlet {
             	}
             	return;
         	}
-            if (theMatch.isCompleted) {
+            if (theMatch.isCompleted || theMatch.isAborted) {
                 //QueueFactory.getQueue("stats").add(withUrl("/tasks/live_update_stats").param("matchURL", theMatchURL).method(Method.GET).retryOptions(withTaskRetryLimit(0)));
                 for (String aPlayer : theMatch.playerNamesFromHost) {
                 	if (!aPlayer.isEmpty() && !aPlayer.toLowerCase().equals("random")) {
