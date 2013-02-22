@@ -71,7 +71,7 @@ public class HostReport {
 
         Set<String> skilledPlayers = new HashSet<String>();
         try {
-	        JSONObject hostStats = FinalOverallStats.load(theHost).getJSON();
+	        JSONObject hostStats = FinalOverallStats.load(getHostHashedPK(theHost)).getJSON();
 	        JSONObject agonScaledSkill = hostStats.getJSONObject("agonScaledSkill");
 	        Iterator<?> agonSkillItr = agonScaledSkill.keys();
 	        while (agonSkillItr.hasNext()) {
