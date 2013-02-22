@@ -22,6 +22,7 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
 import java.util.Properties;
+import java.util.logging.Logger;
 
 import javax.mail.Message;
 import javax.mail.MessagingException;
@@ -81,7 +82,7 @@ public class HostReport {
 	        	}
 	        }
         } catch (JSONException je) {
-        	throw new RuntimeException(je);
+        	Logger.getAnonymousLogger().severe("Caught exception while fetching stats for host " + theHost + ": " + je);
         }
         
 		try {
@@ -113,7 +114,9 @@ public class HostReport {
         theMessage.append("Percentage scrambled: " + trimNumber(fractionScrambled.getWeightedAverage()*100) + "%\n");        
         theMessage.append("Average players/match: " + trimNumber(playersPerMatch.getWeightedAverage()) + "\n");
         theMessage.append("Player-hours consumed: " + trimNumber(millisecondsPlayed/3600000.0) + "\n");
-        theMessage.append("Unique 7DA skilled players: " + distinctSkilledPlayers.size() + "\n");
+        if (skilledPlayers.size() > 0) {
+        	theMessage.append("Unique 7DA skilled players: " + distinctSkilledPlayers.size() + "\n");
+        }
         theMessage.append("Unique 7DA players: " + distinctPlayers.size() + "\n");        
         theMessage.append("Unique 7DA games: " + distinctGames.size() + "\n");        
         theMessage.append("Last match started on " + new Date(latestStartTime) + "\n");
