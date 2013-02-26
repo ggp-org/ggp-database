@@ -64,6 +64,7 @@ public class HostReport {
         Set<String> distinctSkilledPlayers = new HashSet<String>();
         long latestStartTime = 0;
         double millisecondsPlayed = 0;
+        double millisecondsPlayedSkilled = 0;
         WeightedAverageStatistic.NaiveWeightedAverage playersPerMatch = new WeightedAverageStatistic.NaiveWeightedAverage();
         WeightedAverageStatistic.NaiveWeightedAverage fractionScrambled = new WeightedAverageStatistic.NaiveWeightedAverage();
         WeightedAverageStatistic.NaiveWeightedAverage fractionAbandoned = new WeightedAverageStatistic.NaiveWeightedAverage();
@@ -97,7 +98,14 @@ public class HostReport {
             	fractionAbandoned.addEntry((!e.isCompleted && (e.isAborted == null || !e.isAborted) && e.startTime < System.currentTimeMillis()-21600000L) ? 1 : 0, 1.0);
             	fractionAborted.addEntry((e.isAborted != null && e.isAborted) ? 1 : 0, 1.0);
             	latestStartTime = Math.max(latestStartTime, e.startTime);
-            	millisecondsPlayed += e.matchLength * e.matchRoles;
+            	int nRealPlayersForMatch = 0;
+            	int nSkilledPlayersForMatch = 0;
+            	for (String player : e.playerNamesFromHost) {
+            		nRealPlayersForMatch += player.toLowerCase().equals("random") ? 0 : 1;
+            		nSkilledPlayersForMatch += skilledPlayers.contains(player) ? 1 : 0;
+            	}
+            	millisecondsPlayed += e.matchLength * nRealPlayersForMatch;
+            	millisecondsPlayedSkilled += e.matchLength * nSkilledPlayersForMatch;
             	nMatches++;
             }
         } finally {
@@ -113,11 +121,12 @@ public class HostReport {
         theMessage.append("Percentage aborted: " + trimNumber(fractionAborted.getWeightedAverage()*100) + "%\n");
         theMessage.append("Percentage scrambled: " + trimNumber(fractionScrambled.getWeightedAverage()*100) + "%\n");        
         theMessage.append("Average players/match: " + trimNumber(playersPerMatch.getWeightedAverage()) + "\n");
-        theMessage.append("Player-hours consumed: " + trimNumber(millisecondsPlayed/3600000.0) + "\n");
+        theMessage.append("Player-hours consumed: " + trimNumber(millisecondsPlayed/3600000.0) + " (" + trimNumber(millisecondsPlayed/604800000.0) + " h/h)\n");
         if (skilledPlayers.size() > 0) {
+        	theMessage.append("Skilled player-hours consumed: " + trimNumber(millisecondsPlayedSkilled/3600000.0) + " (" + trimNumber(millisecondsPlayedSkilled/604800000.0) + " h/h)\n");
         	theMessage.append("Unique 7DA skilled players: " + distinctSkilledPlayers.size() + "\n");
         }
-        theMessage.append("Unique 7DA players: " + distinctPlayers.size() + "\n");        
+        theMessage.append("Unique 7DA players: " + distinctPlayers.size() + "\n");
         theMessage.append("Unique 7DA games: " + distinctGames.size() + "\n");        
         theMessage.append("Last match started on " + new Date(latestStartTime) + "\n");
         
