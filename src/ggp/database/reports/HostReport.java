@@ -39,6 +39,7 @@ public class HostReport {
 		if (theHost.toLowerCase().equals("dresden")) return "f69721b2f73839e513eed991e96824f1af218ac1";
 		if (theHost.toLowerCase().equals("artemis")) return "5bc94f8e793772e8585a444f2fc95d2ac087fed0";
 		if (theHost.toLowerCase().equals("sample")) return "0ca7065b86d7646166d86233f9e23ac47d8320d4";
+		if (theHost.toLowerCase().equals("cs227b")) return "52bd861857f677a2432837fcf2f7d73a4e6b30d7";
 		return theHost;
 	}
 	
