@@ -159,7 +159,7 @@ public class GGP_DatabaseServlet extends HttpServlet {
             String thePlayerName = req.getParameter("playerName");
             
             JSONObject theMatchJSON = null;
-        	try {        		
+        	try {
 	            theMatchJSON = RemoteResourceLoader.loadJSON("http://tiltyard.ggp.org/data/players/" + thePlayerName);
         	} catch (Exception e) {        		
         		// For the first few exceptions, silently issue errors to task queue to trigger retries.
@@ -167,7 +167,7 @@ public class GGP_DatabaseServlet extends HttpServlet {
             	// This reduces the amount of noise in the error logs caused by transient server errors.
         		resp.setStatus(503);
         		int nRetryAttempt = Integer.parseInt(req.getHeader("X-AppEngine-TaskRetryCount"));
-            	if (nRetryAttempt > FETCH_LOG_RETRIES - 3) {
+            	if (nRetryAttempt > FETCH_LOG_RETRIES - 3) {            		
             		throw new RuntimeException(e);
             	}
             	return;
@@ -185,16 +185,23 @@ public class GGP_DatabaseServlet extends HttpServlet {
         	
             JSONObject theData = null;
         	try {
+        		Counter.increment("Database.Logs.Fetch.Attempts");
         		theData = RemoteResourceLoader.loadJSON("http://" + thePlayerAddress + "/" + theMatchID);
+        		Counter.increment("Database.Logs.Fetch.Successes");
         	} catch (Exception e) {        		
         		// For the first few exceptions, silently issue errors to task queue to trigger retries.
         		// After a few retries, start surfacing the exceptions, since they're clearly not transient.
             	// This reduces the amount of noise in the error logs caused by transient server errors.
-        		resp.setStatus(503);
+        		resp.setStatus(503);        		
+        		/* TODO(schreib): Figure out the right way to handle players whose log summarizers
+        		 * are not responsive to the database log fetching requests. Don't just spam the error
+        		 * log, since that's clearly not working.
         		int nRetryAttempt = Integer.parseInt(req.getHeader("X-AppEngine-TaskRetryCount"));
             	if (nRetryAttempt > FETCH_LOG_RETRIES - 3) {
             		throw new RuntimeException(e);
             	}
+            	*/
+            	Counter.increment("Database.Logs.Fetch.Failures");
             	return;
         	}
         	
