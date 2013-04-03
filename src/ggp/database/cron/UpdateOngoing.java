@@ -27,9 +27,9 @@ public class UpdateOngoing {
     private static void updateOngoingSince(String sinceTime) throws IOException {
         Query query = Persistence.getPersistenceManager().newQuery(CondensedMatch.class);
         if (sinceTime == null) {
-            query.setFilter("isCompleted == false");
+            query.setFilter("isCompleted == false && isAborted == false");
         } else {
-            query.setFilter("isCompleted == false && startTime > " + sinceTime);
+            query.setFilter("isCompleted == false && isAborted == false && startTime > " + sinceTime);
         }
 
         try {
