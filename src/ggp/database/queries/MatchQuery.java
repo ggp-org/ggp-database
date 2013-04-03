@@ -63,7 +63,7 @@ public class MatchQuery {
                 queryFilter += "gameMetaURL == '" + theGame + "'";
             } else if (theVerb.equals("filterActiveSet")) {
                 String sixHoursAgo = "" + (System.currentTimeMillis() - 21600000L);
-                queryFilter += "isCompleted == false && startTime > " + sixHoursAgo;
+                queryFilter += "isCompleted == false && isAborted == false && startTime > " + sixHoursAgo;
             } else if (!theVerb.equals("filter")) {
                 resp.setStatus(404);
                 return;
