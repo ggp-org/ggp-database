@@ -37,6 +37,7 @@ public class PlayerReport {
         
         int nMatches = 0;
         long latestCleanStartTime = 0;
+        double millisecondsPlayed = 0;
         WeightedAverageStatistic.NaiveWeightedAverage myAvgScore = new WeightedAverageStatistic.NaiveWeightedAverage();
         WeightedAverageStatistic.NaiveWeightedAverage myAvgErrors = new WeightedAverageStatistic.NaiveWeightedAverage();
         
@@ -56,6 +57,7 @@ public class PlayerReport {
                 		latestCleanStartTime = e.startTime;
                 	}
             	}
+            	millisecondsPlayed += e.matchLength;
             	nMatches++;
             }
         } finally {
@@ -68,6 +70,7 @@ public class PlayerReport {
         theMessage.append("Total matches: " + nMatches + "\n");
         theMessage.append("Percentage with errors: " + trimNumber(myAvgErrors.getWeightedAverage()*100) + "%\n");
         theMessage.append("Avg score, for clean matches: " + trimNumber(myAvgScore.getWeightedAverage()) + "\n");
+        theMessage.append("Player-hours produced: " + trimNumber(millisecondsPlayed/3600000.0) + " (" + trimNumber(millisecondsPlayed/604800000.0) + " h/h)\n");
         theMessage.append("Last clean match started on " + new Date(latestCleanStartTime) + "\n");
         
         Properties props = new Properties();
