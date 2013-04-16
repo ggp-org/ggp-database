@@ -138,7 +138,7 @@ public class GGP_DatabaseServlet extends HttpServlet {
                 //QueueFactory.getQueue("stats").add(withUrl("/tasks/live_update_stats").param("matchURL", theMatchURL).method(Method.GET).retryOptions(withTaskRetryLimit(0)));
                 for (String aPlayer : theMatch.playerNamesFromHost) {
                 	// TODO(schreib): Figure out a way to not restrict this based on host; instead have a way to retrieve player information regardless of host.
-                	if (!aPlayer.isEmpty() && !aPlayer.toLowerCase().equals("random") && theMatch.hashedMatchHostPK.equals("90bd08a7df7b8113a45f1e537c1853c3974006b2")) {
+                	if (aPlayer != null && !aPlayer.isEmpty() && !aPlayer.toLowerCase().equals("random") && theMatch.hashedMatchHostPK != null && theMatch.hashedMatchHostPK.equals("90bd08a7df7b8113a45f1e537c1853c3974006b2")) {
                 		QueueFactory.getDefaultQueue().add(withUrl("/tasks/fetch_log").param("matchURL", theMatchURL).param("playerName", aPlayer).param("matchID", theMatch.matchId).method(Method.GET).retryOptions(withTaskRetryLimit(FETCH_LOG_RETRIES)));
                 	}
                 }
