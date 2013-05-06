@@ -12,6 +12,7 @@ import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 import javax.jdo.Query;
 import javax.servlet.http.HttpServletResponse;
@@ -29,6 +30,8 @@ public class MatchQuery {
         JSONObject theResponse = null;
         if (theRPC.startsWith("filterLog")) {
         	theResponse = runLogQuery(resp, theRPC);
+        } else if (theRPC.startsWith("export1000")) {
+        	theResponse = runExportQuery(resp, theRPC);
         } else if (theRPC.startsWith("filter")) {
             Deque<String> theSplitParams = new ArrayDeque<String>(Arrays.asList(theRPC.split(",")));
             String theVerb, theDomain, theHost;
@@ -36,6 +39,9 @@ public class MatchQuery {
                 theVerb = theSplitParams.pop();
                 theDomain = theSplitParams.pop();
                 theHost = theSplitParams.pop();
+            } catch (NoSuchElementException e) {
+                resp.setStatus(404);
+                return;            	
             } catch (ArrayIndexOutOfBoundsException e) {
                 resp.setStatus(404);
                 return;
@@ -160,5 +166,32 @@ public class MatchQuery {
             ;
         }
         return theResponse;
+    }
+    
+    public static JSONObject runExportQuery(HttpServletResponse resp, String theRPC) throws IOException {        
+        Query query = Persistence.getPersistenceManager().newQuery(CondensedMatch.class);
+        query.setOrdering("startTime desc");
+        query.setRange(0, 1000);
+        
+        JSONArray theArray = new JSONArray();
+        try {
+            @SuppressWarnings("unchecked")
+			List<CondensedMatch> results = (List<CondensedMatch>) query.execute();
+            if (!results.isEmpty()) {
+                for (CondensedMatch e : results) {
+                	theArray.put(e.getMatchJSON());
+                }
+            }
+        } finally {
+            query.closeAll();
+        }
+        
+        try {
+            JSONObject theResponse = new JSONObject();
+            theResponse.put("matches", theArray);
+            return theResponse;
+        } catch (JSONException je) {
+            return null;
+        }
     }
 }
