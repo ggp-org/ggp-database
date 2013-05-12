@@ -16,14 +16,17 @@ import ggp.database.statistics.statistic.implementation.AverageScore;
 import ggp.database.statistics.statistic.implementation.LastPlayed;
 import ggp.database.statistics.statistic.implementation.Matches;
 import ggp.database.statistics.statistic.implementation.MatchesAbandoned;
+import ggp.database.statistics.statistic.implementation.MatchesAborted;
 import ggp.database.statistics.statistic.implementation.MatchesAverageMoves;
 import ggp.database.statistics.statistic.implementation.MatchesAveragePlayers;
 import ggp.database.statistics.statistic.implementation.MatchesFinished;
+import ggp.database.statistics.statistic.implementation.MatchesScrambled;
 import ggp.database.statistics.statistic.implementation.MatchesStartedChart;
 import ggp.database.statistics.statistic.implementation.MatchesStatErrors;
 import ggp.database.statistics.statistic.implementation.NetScore;
 import ggp.database.statistics.statistic.implementation.ObservedGames;
 import ggp.database.statistics.statistic.implementation.ObservedPlayers;
+import ggp.database.statistics.statistic.implementation.PlayerHoursConsumed;
 import ggp.database.statistics.statistic.implementation.RoleCorrelationWithSkill;
 import ggp.database.statistics.statistic.implementation.RolePlayerAverageScore;
 import ggp.database.statistics.statistic.implementation.StatsVersion;
@@ -178,19 +181,22 @@ public class StatisticsComputation implements Statistic.Reader {
         registeredStatistics.add(new LastPlayed());
         registeredStatistics.add(new Matches());
         registeredStatistics.add(new MatchesAbandoned());
+        registeredStatistics.add(new MatchesAborted());
         registeredStatistics.add(new MatchesAverageMoves());
         registeredStatistics.add(new MatchesAveragePlayers());
         registeredStatistics.add(new MatchesFinished());
+        registeredStatistics.add(new MatchesScrambled());
         registeredStatistics.add(new MatchesStartedChart());
         registeredStatistics.add(new MatchesStatErrors());
         registeredStatistics.add(new NetScore());
         registeredStatistics.add(new ObservedGames());
         registeredStatistics.add(new ObservedPlayers());
+        registeredStatistics.add(new PlayerHoursConsumed());
         registeredStatistics.add(new RoleCorrelationWithSkill());
         registeredStatistics.add(new RolePlayerAverageScore());
         registeredStatistics.add(new StatsVersion());
         registeredStatistics.add(new UpdatedAt());
-        registeredStatistics.add(new WinsVersusPlayerOnGame());
+        registeredStatistics.add(new WinsVersusPlayerOnGame());        
     }
     
     @SuppressWarnings("unchecked")

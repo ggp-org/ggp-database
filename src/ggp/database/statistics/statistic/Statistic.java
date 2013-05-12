@@ -110,5 +110,12 @@ public abstract class Statistic {
     
     public static String camelCase(String x) {
         return x.substring(0,1).toLowerCase() + x.substring(1);
-    }    
+    }
+    
+    @SuppressWarnings("unchecked")
+    public static <T> T getProperty(Entity entity, String propertyName, T defaultValue) {
+    	if (!entity.hasProperty(propertyName)) return defaultValue;
+    	if (entity.getProperty(propertyName) == null) return defaultValue;    	
+    	return (T)entity.getProperty(propertyName);
+    }
 }
