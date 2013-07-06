@@ -14,7 +14,7 @@ import org.json.JSONObject;
 public class MatchStatistics extends HttpServlet {
     public static void respondWithStats(HttpServletResponse resp, String theStatistic) throws IOException {
         JSONObject theResponse = null;
-        {
+        if (theStatistic != null && theStatistic.indexOf("/") > -1) {
             String theLabel = theStatistic.substring(0, theStatistic.indexOf("/"));
             theStatistic = theStatistic.replaceFirst(theLabel + "/", "");
             if (theStatistic.equals("overall")) {
