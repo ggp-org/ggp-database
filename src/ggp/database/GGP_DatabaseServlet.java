@@ -271,8 +271,8 @@ public class GGP_DatabaseServlet extends HttpServlet {
         resp.setStatus(404);
     }
     
-    private static final int FETCH_LOG_RETRIES = 10;
-    private static final int INGESTION_RETRIES = 10;
+    private static final int FETCH_LOG_RETRIES = 20;
+    private static final int INGESTION_RETRIES = 20;
     public void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws IOException {
         resp.setHeader("Access-Control-Allow-Origin", "*");
