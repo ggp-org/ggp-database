@@ -50,6 +50,7 @@ public class MatchLog {
             theResponse = loadLogData(splitLogURL[1], "http://matches.ggp.org/matches/" + splitLogURL[0] + "/");
         }
         if (theResponse != null) {
+        	resp.setContentType("application/json");
             resp.getWriter().println(theResponse.toString());
         } else {
             resp.setStatus(404);
