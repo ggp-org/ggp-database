@@ -128,6 +128,7 @@ public class MatchQuery {
             }
         }
         if (theResponse != null) {
+        	resp.setContentType("application/json");
             resp.getWriter().println(theResponse.toString());
         } else {
             resp.setStatus(404);
