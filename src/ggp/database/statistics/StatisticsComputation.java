@@ -13,6 +13,7 @@ import ggp.database.statistics.statistic.implementation.ComputedAt;
 import ggp.database.statistics.statistic.implementation.DecayedAverageScore;
 import ggp.database.statistics.statistic.implementation.EloRank;
 import ggp.database.statistics.statistic.implementation.AverageScore;
+import ggp.database.statistics.statistic.implementation.ErrorRateForPlayer;
 import ggp.database.statistics.statistic.implementation.LastPlayed;
 import ggp.database.statistics.statistic.implementation.Matches;
 import ggp.database.statistics.statistic.implementation.MatchesAbandoned;
@@ -196,7 +197,8 @@ public class StatisticsComputation implements Statistic.Reader {
         registeredStatistics.add(new RolePlayerAverageScore());
         registeredStatistics.add(new StatsVersion());
         registeredStatistics.add(new UpdatedAt());
-        registeredStatistics.add(new WinsVersusPlayerOnGame());        
+        registeredStatistics.add(new WinsVersusPlayerOnGame());
+        registeredStatistics.add(new ErrorRateForPlayer());
     }
     
     @SuppressWarnings("unchecked")

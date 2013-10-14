@@ -7,6 +7,6 @@ import ggp.database.statistics.statistic.Statistic;
 public class StatsVersion extends Statistic {
     @Override public void updateWithMatch(Entity newMatch) {};
     @Override public Object getFinalForm() {
-        return 23;
+        return 24;
     }
 }
