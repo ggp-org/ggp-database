@@ -5,6 +5,11 @@
     <bucket-size>100</bucket-size>
   </queue>
   <queue>
+    <name>logfetch</name>
+    <rate>100/s</rate>
+    <bucket-size>100</bucket-size>
+  </queue>
+  <queue>
     <name>stats</name>
     <rate>100/s</rate>
     <bucket-size>100</bucket-size>

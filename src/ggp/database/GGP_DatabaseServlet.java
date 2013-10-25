@@ -121,13 +121,14 @@ public class GGP_DatabaseServlet extends HttpServlet {
         	String theMatchURL = req.getParameter("matchURL");
         	CondensedMatch theMatch = null;
         	try {
-	            JSONObject theMatchJSON = RemoteResourceLoader.loadJSON(theMatchURL);
+	            JSONObject theMatchJSON = RemoteResourceLoader.loadJSON(theMatchURL, 7);
 	            theMatch = CondensedMatch.storeCondensedMatchJSON(theMatchURL, theMatchJSON);
-        	} catch (Exception e) {        		
+        	} catch (Exception e) {
         		// For the first few exceptions, silently issue errors to task queue to trigger retries.
         		// After a few retries, start surfacing the exceptions, since they're clearly not transient.
             	// This reduces the amount of noise in the error logs caused by transient server errors.
         		resp.setStatus(503);
+        		Logger.getAnonymousLogger().severe(e.getMessage());
         		int nRetryAttempt = Integer.parseInt(req.getHeader("X-AppEngine-TaskRetryCount"));
             	if (nRetryAttempt > INGESTION_RETRIES - 3) {
             		throw new RuntimeException(e);
@@ -139,7 +140,7 @@ public class GGP_DatabaseServlet extends HttpServlet {
                 for (String aPlayer : theMatch.playerNamesFromHost) {
                 	// TODO(schreib): Figure out a way to not restrict this based on host; instead have a way to retrieve player information regardless of host.
                 	if (aPlayer != null && !aPlayer.isEmpty() && !aPlayer.toLowerCase().equals("random") && theMatch.hashedMatchHostPK != null && theMatch.hashedMatchHostPK.equals("90bd08a7df7b8113a45f1e537c1853c3974006b2")) {
-                		QueueFactory.getDefaultQueue().add(withUrl("/tasks/fetch_log").param("matchURL", theMatchURL).param("playerName", aPlayer).param("matchID", theMatch.matchId).method(Method.GET).retryOptions(withTaskRetryLimit(FETCH_LOG_RETRIES).minBackoffSeconds(30).maxBackoffSeconds(3600)));
+                		QueueFactory.getQueue("logfetch").add(withUrl("/tasks/fetch_log").param("matchURL", theMatchURL).param("playerName", aPlayer).param("matchID", theMatch.matchId).method(Method.GET).retryOptions(withTaskRetryLimit(FETCH_LOG_RETRIES)));
                 	}
                 }
             }        	
@@ -192,7 +193,7 @@ public class GGP_DatabaseServlet extends HttpServlet {
         		// For the first few exceptions, silently issue errors to task queue to trigger retries.
         		// After a few retries, start surfacing the exceptions, since they're clearly not transient.
             	// This reduces the amount of noise in the error logs caused by transient server errors.
-        		resp.setStatus(503);        		
+        		resp.setStatus(503);
         		/* TODO(schreib): Figure out the right way to handle players whose log summarizers
         		 * are not responsive to the database log fetching requests. Don't just spam the error
         		 * log, since that's clearly not working.
@@ -201,6 +202,7 @@ public class GGP_DatabaseServlet extends HttpServlet {
             		throw new RuntimeException(e);
             	}
             	*/
+        		Logger.getAnonymousLogger().severe("Failure when fetching logs for player: " + thePlayerName);
             	Counter.increment("Database.Logs.Fetch.Failures");
             	return;
         	}
@@ -271,8 +273,8 @@ public class GGP_DatabaseServlet extends HttpServlet {
         resp.setStatus(404);
     }
     
-    private static final int FETCH_LOG_RETRIES = 20;
-    private static final int INGESTION_RETRIES = 20;
+    private static final int FETCH_LOG_RETRIES = 5;
+    private static final int INGESTION_RETRIES = 25;
     public void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws IOException {
         resp.setHeader("Access-Control-Allow-Origin", "*");
