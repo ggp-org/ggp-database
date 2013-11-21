@@ -109,11 +109,15 @@ public class MatchQuery {
                         } else {
                             theArray.put(e.getMatchJSON());
                         }
-                        Cursor cursor = JDOCursorHelper.getCursor(results);
-                        newCursor = cursor.toWebSafeString();
                     }
+                    Cursor cursor = JDOCursorHelper.getCursor(results);
+                    newCursor = cursor.toWebSafeString();                    
                 } else {
                     // ... no results ...
+                }
+                
+                if (results.size() < 50) {
+                	newCursor = "";
                 }
             } finally {
                 query.closeAll();
