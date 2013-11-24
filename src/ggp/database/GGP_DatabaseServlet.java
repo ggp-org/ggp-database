@@ -121,7 +121,7 @@ public class GGP_DatabaseServlet extends HttpServlet {
         	String theMatchURL = req.getParameter("matchURL");
         	CondensedMatch theMatch = null;
         	try {
-	            JSONObject theMatchJSON = RemoteResourceLoader.loadJSON(theMatchURL, 7);
+	            JSONObject theMatchJSON = RemoteResourceLoader.loadJSON(theMatchURL, 14);
 	            theMatch = CondensedMatch.storeCondensedMatchJSON(theMatchURL, theMatchJSON);
         	} catch (Exception e) {
         		// For the first few exceptions, silently issue errors to task queue to trigger retries.
@@ -187,13 +187,14 @@ public class GGP_DatabaseServlet extends HttpServlet {
             JSONObject theData = null;
         	try {
         		Counter.increment("Database.Logs.Fetch.Attempts");
-        		theData = RemoteResourceLoader.loadJSON("http://" + thePlayerAddress + "/" + theMatchID);
+        		theData = RemoteResourceLoader.loadJSON("http://" + thePlayerAddress + "/" + theMatchID, 7);
         		Counter.increment("Database.Logs.Fetch.Successes");
         	} catch (Exception e) {        		
         		// For the first few exceptions, silently issue errors to task queue to trigger retries.
         		// After a few retries, start surfacing the exceptions, since they're clearly not transient.
             	// This reduces the amount of noise in the error logs caused by transient server errors.
-        		resp.setStatus(503);
+        		//resp.setStatus(503);
+        		resp.setStatus(200);
         		/* TODO(schreib): Figure out the right way to handle players whose log summarizers
         		 * are not responsive to the database log fetching requests. Don't just spam the error
         		 * log, since that's clearly not working.
