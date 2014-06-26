@@ -203,7 +203,7 @@ public class GGP_DatabaseServlet extends HttpServlet {
             		throw new RuntimeException(e);
             	}
             	*/
-        		Logger.getAnonymousLogger().severe("Failure when fetching logs for player: " + thePlayerName);
+        		Logger.getAnonymousLogger().severe("Failure when fetching logs for player: " + thePlayerName + " due to " + e.toString() + " caused by " + e.getCause());
             	Counter.increment("Database.Logs.Fetch.Failures");
             	return;
         	}
