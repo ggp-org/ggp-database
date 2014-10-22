@@ -11,7 +11,6 @@ import org.ggp.galaxy.shared.persistence.Persistence;
 
 @PersistenceCapable
 public class ServerState {
-    @SuppressWarnings("unused")
     @PrimaryKey @Persistent private String thePrimaryKey;
     @Persistent private String theValidationToken;
 

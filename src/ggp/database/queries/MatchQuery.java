@@ -2,6 +2,9 @@ package ggp.database.queries;
 
 import org.ggp.galaxy.shared.persistence.Persistence;
 
+import external.JSON.JSONArray;
+import external.JSON.JSONException;
+import external.JSON.JSONObject;
 import ggp.database.logs.MatchLog;
 import ggp.database.matches.CondensedMatch;
 
@@ -20,9 +23,6 @@ import javax.servlet.http.HttpServletResponse;
 import org.datanucleus.store.appengine.query.JDOCursorHelper;
 
 import com.google.appengine.api.datastore.Cursor;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 public class MatchQuery {
     @SuppressWarnings("unchecked")

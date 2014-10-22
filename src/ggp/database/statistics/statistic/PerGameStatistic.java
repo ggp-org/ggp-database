@@ -7,8 +7,8 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.appengine.api.datastore.Entity;
-import org.json.JSONException;
-import org.json.JSONObject;
+import external.JSON.JSONException;
+import external.JSON.JSONObject;
 
 public abstract class PerGameStatistic<T extends Statistic> extends Statistic {
     private static final String gamePrefix = "game_";
@@ -47,12 +47,11 @@ public abstract class PerGameStatistic<T extends Statistic> extends Statistic {
         return getPerGameStatistic(forGame).getFinalForm();
     }
 
-    @SuppressWarnings("unchecked")
     public Set<String> getKnownGameNames() {
         Set<String> theKnownGames = new HashSet<String>();
-        Iterator<String> i = getState().keys();
+        Iterator<?> i = getState().keys();
         while(i.hasNext()) {
-            String theKey = i.next();
+            String theKey = i.next().toString();
             if (theKey.startsWith(gamePrefix)) {
                 theKnownGames.add(theKey.replaceFirst(gamePrefix, ""));
             }

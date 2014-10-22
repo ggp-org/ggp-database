@@ -11,7 +11,6 @@ import javax.jdo.annotations.*;
 
 @PersistenceCapable
 public class DailyReport {
-    @SuppressWarnings("unused")
     @PrimaryKey @Persistent private String thePrimaryKey;
     @Persistent private Set<String> recipients;    
     @Persistent private ReportType reportType;

@@ -1,6 +1,9 @@
 package ggp.database.logs;
 
 import org.ggp.galaxy.shared.persistence.Persistence;
+
+import external.JSON.JSONException;
+import external.JSON.JSONObject;
 import ggp.database.matches.CondensedMatch;
 import ggp.database.notifications.UpdateRegistry;
 import ggp.database.statistics.StringCompressor;
@@ -30,9 +33,6 @@ import com.google.appengine.api.channel.ChannelMessage;
 import com.google.appengine.api.channel.ChannelService;
 import com.google.appengine.api.channel.ChannelServiceFactory;
 import com.google.appengine.api.datastore.Text;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 @PersistenceCapable
 @SuppressWarnings("unused")

@@ -1,6 +1,12 @@
 package ggp.database.matches;
 
+import org.ggp.base.util.crypto.BaseHashing;
+import org.ggp.base.util.crypto.SignableJSON;
 import org.ggp.galaxy.shared.persistence.Persistence;
+
+import external.JSON.JSONArray;
+import external.JSON.JSONException;
+import external.JSON.JSONObject;
 import ggp.database.notifications.UpdateRegistry;
 
 import java.io.BufferedInputStream;
@@ -23,12 +29,6 @@ import com.google.appengine.api.channel.ChannelMessage;
 import com.google.appengine.api.channel.ChannelService;
 import com.google.appengine.api.channel.ChannelServiceFactory;
 import com.google.appengine.api.datastore.Text;
-
-import org.ggp.galaxy.shared.crypto.BaseHashing;
-import org.ggp.galaxy.shared.crypto.SignableJSON;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 @PersistenceCapable
 @SuppressWarnings("unused")

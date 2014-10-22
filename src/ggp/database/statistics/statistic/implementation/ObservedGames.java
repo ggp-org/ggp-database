@@ -6,8 +6,8 @@ import java.util.Set;
 import ggp.database.statistics.statistic.Statistic;
 
 import com.google.appengine.api.datastore.Entity;
-import org.json.JSONArray;
-import org.json.JSONException;
+import external.JSON.JSONException;
+import external.JSON.JSONArray;
 
 public class ObservedGames extends Statistic {
     private Set<String> theGames;

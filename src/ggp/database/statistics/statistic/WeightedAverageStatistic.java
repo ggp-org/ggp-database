@@ -1,8 +1,8 @@
 package ggp.database.statistics.statistic;
 
 import com.google.appengine.api.datastore.Entity;
-import org.json.JSONArray;
-import org.json.JSONException;
+import external.JSON.JSONException;
+import external.JSON.JSONArray;
 
 public abstract class WeightedAverageStatistic extends Statistic {
     public WeightedAverageStatistic() {

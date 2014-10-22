@@ -2,11 +2,11 @@ package ggp.database.statistics.stored;
 
 import org.ggp.galaxy.shared.persistence.Persistence;
 
+import external.JSON.JSONObject;
+
 import java.util.Set;
 
 import javax.jdo.annotations.*;
-
-import org.json.JSONObject;
 
 @PersistenceCapable
 public class IntermediateStatistics extends StoredJSON {

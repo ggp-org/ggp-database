@@ -8,7 +8,7 @@ import ggp.database.statistics.stored.IntermediateStatistics;
 import java.io.IOException;
 
 import javax.servlet.http.*;
-import org.json.JSONObject;
+import external.JSON.JSONObject;
 
 @SuppressWarnings("serial")
 public class MatchStatistics extends HttpServlet {

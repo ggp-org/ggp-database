@@ -9,8 +9,8 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.appengine.api.datastore.Entity;
-import org.json.JSONException;
-import org.json.JSONObject;
+import external.JSON.JSONException;
+import external.JSON.JSONObject;
 
 public abstract class PerPlayerStatistic<T extends Statistic> extends Statistic {
     private static final String playerPrefix = "player_";
@@ -49,12 +49,11 @@ public abstract class PerPlayerStatistic<T extends Statistic> extends Statistic 
         return getPerPlayerStatistic(forPlayer).getFinalForm();
     }
 
-    @SuppressWarnings("unchecked")
     public Set<String> getKnownPlayerNames() {
         Set<String> theKnownPlayers = new HashSet<String>();
-        Iterator<String> i = getState().keys();
+        Iterator<?> i = getState().keys();
         while(i.hasNext()) {
-            String theKey = i.next();
+            String theKey = i.next().toString();
             if (theKey.startsWith(playerPrefix)) {
                 theKnownPlayers.add(theKey.replaceFirst(playerPrefix, ""));
             }

@@ -11,6 +11,11 @@ import java.util.Map;
 import java.util.TreeSet;
 
 import org.ggp.galaxy.shared.persistence.Persistence;
+
+import external.JSON.JSONArray;
+import external.JSON.JSONException;
+import external.JSON.JSONObject;
+import external.JSON.JSONString;
 import ggp.database.statistics.StringCompressor;
 
 import javax.jdo.PersistenceManager;
@@ -24,11 +29,6 @@ import com.google.appengine.api.files.AppEngineFile;
 import com.google.appengine.api.files.FileService;
 import com.google.appengine.api.files.FileServiceFactory;
 import com.google.appengine.api.files.FileWriteChannel;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-import org.json.JSONString;
 
 @PersistenceCapable
 @Inheritance(strategy=InheritanceStrategy.SUBCLASS_TABLE)

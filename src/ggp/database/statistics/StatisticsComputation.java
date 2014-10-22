@@ -1,6 +1,8 @@
 package ggp.database.statistics;
 
 import static com.google.appengine.api.datastore.FetchOptions.Builder.withChunkSize;
+import external.JSON.JSONException;
+import external.JSON.JSONObject;
 import ggp.database.statistics.statistic.PerPlayerStatistic;
 import ggp.database.statistics.statistic.Statistic;
 import ggp.database.statistics.statistic.implementation.AgonRank;
@@ -53,9 +55,6 @@ import com.google.appengine.api.datastore.PreparedQuery;
 import com.google.appengine.api.datastore.Query;
 import com.google.appengine.api.datastore.QueryResultIterator;
 import com.google.appengine.api.datastore.ReadPolicy;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 public class StatisticsComputation implements Statistic.Reader {
     public static void computeBatchStatistics() throws IOException {

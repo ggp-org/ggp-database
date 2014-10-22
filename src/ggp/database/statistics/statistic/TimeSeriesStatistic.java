@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.google.appengine.api.datastore.Entity;
-import org.json.JSONArray;
-import org.json.JSONException;
+import external.JSON.JSONException;
+import external.JSON.JSONArray;
 
 public abstract class TimeSeriesStatistic extends Statistic {
     public static final long timeStart = 1240000000000L;

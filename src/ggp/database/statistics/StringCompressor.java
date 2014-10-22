@@ -4,7 +4,7 @@ import java.io.ByteArrayOutputStream;
 import java.util.zip.Deflater;
 import java.util.zip.Inflater;
 
-import org.ggp.galaxy.shared.crypto.external.Base64Coder;
+import external.Base64Coder.Base64Coder;
 
 public class StringCompressor {
     public static String compress(String x) {

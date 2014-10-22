@@ -1,9 +1,9 @@
 package ggp.database.reports;
 
 import org.ggp.galaxy.shared.persistence.Persistence;
-import org.json.JSONException;
-import org.json.JSONObject;
 
+import external.JSON.JSONException;
+import external.JSON.JSONObject;
 import ggp.database.matches.CondensedMatch;
 import ggp.database.statistics.statistic.WeightedAverageStatistic;
 import ggp.database.statistics.stored.FinalOverallStats;

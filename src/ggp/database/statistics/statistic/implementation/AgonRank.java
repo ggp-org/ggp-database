@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.json.JSONException;
+import external.JSON.JSONException;
 
 import ggp.database.statistics.statistic.CounterStatistic;
 

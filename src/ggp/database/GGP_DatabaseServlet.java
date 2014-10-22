@@ -2,7 +2,8 @@ package ggp.database;
 
 import static com.google.appengine.api.taskqueue.RetryOptions.Builder.withTaskRetryLimit;
 import static com.google.appengine.api.taskqueue.TaskOptions.Builder.withUrl;
-
+import external.JSON.JSONException;
+import external.JSON.JSONObject;
 import ggp.database.cron.CleanupOldBlobs;
 import ggp.database.cron.UpdateOngoing;
 import ggp.database.logs.MatchLog;
@@ -35,10 +36,8 @@ import com.google.appengine.api.datastore.ReadPolicy;
 import com.google.appengine.api.taskqueue.QueueFactory;
 import com.google.appengine.api.taskqueue.TaskOptions.Method;
 
-import org.ggp.galaxy.shared.loader.RemoteResourceLoader;
+import org.ggp.base.util.loader.RemoteResourceLoader;
 import org.ggp.galaxy.shared.persistence.Persistence;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 @SuppressWarnings("serial")
 public class GGP_DatabaseServlet extends HttpServlet {
