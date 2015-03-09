@@ -1,6 +1,10 @@
 package ggp.database.reports;
 
 import org.ggp.galaxy.shared.persistence.Persistence;
+import org.joda.time.DateTime;
+import org.joda.time.Period;
+import org.joda.time.format.PeriodFormatterBuilder;
+
 import ggp.database.matches.CondensedMatch;
 import ggp.database.statistics.statistic.WeightedAverageStatistic;
 
@@ -15,6 +19,7 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
 import java.util.Properties;
+
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Session;
@@ -64,14 +69,26 @@ public class PlayerReport {
             query.closeAll();
         }
         
+        String sinceLastMatch = new PeriodFormatterBuilder()
+          .appendYears().appendSuffix(" years, ")
+          .appendMonths().appendSuffix(" months, ")
+          .appendWeeks().appendSuffix(" weeks, ")
+          .appendDays().appendSuffix(" days, ")
+          .appendHours().appendSuffix(" hours, ")
+          .appendMinutes().appendSuffix(" minutes, ")
+          .appendSeconds().appendSuffix(" seconds")
+          .printZeroNever()
+          .toFormatter()
+          .print(new Period(new DateTime(), new DateTime(latestCleanStartTime)));
+        
         StringBuilder theMessage = new StringBuilder();
         theMessage.append("Daily activity report for player " + thePlayer + ", generated on " + new Date() + ".\n");
         theMessage.append("Counts all activity over the past seven days.\n\n");
+        theMessage.append("Last clean match started " + sinceLastMatch + " ago, on " + new Date(latestCleanStartTime) + ".\n");        
         theMessage.append("Total matches: " + nMatches + "\n");
         theMessage.append("Percentage with errors: " + trimNumber(myAvgErrors.getWeightedAverage()*100) + "%\n");
         theMessage.append("Avg score, for clean matches: " + trimNumber(myAvgScore.getWeightedAverage()) + "\n");
         theMessage.append("Player-hours produced: " + trimNumber(millisecondsPlayed/3600000.0) + " (" + trimNumber(millisecondsPlayed/604800000.0) + " h/h)\n");
-        theMessage.append("Last clean match started on " + new Date(latestCleanStartTime) + "\n");
         
         Properties props = new Properties();
         Session session = Session.getDefaultInstance(props, null);
