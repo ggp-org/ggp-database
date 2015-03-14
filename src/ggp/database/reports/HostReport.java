@@ -1,6 +1,9 @@
 package ggp.database.reports;
 
 import org.ggp.galaxy.shared.persistence.Persistence;
+import org.joda.time.DateTime;
+import org.joda.time.Period;
+import org.joda.time.format.PeriodFormatterBuilder;
 
 import external.JSON.JSONException;
 import external.JSON.JSONObject;
@@ -113,10 +116,23 @@ public class HostReport {
             query.closeAll();
         }
         distinctPlayers.remove("");
+
+        String sinceLastMatch = new PeriodFormatterBuilder()
+        .appendYears().appendSuffix(" years, ")
+        .appendMonths().appendSuffix(" months, ")
+        .appendWeeks().appendSuffix(" weeks, ")
+        .appendDays().appendSuffix(" days, ")
+        .appendHours().appendSuffix(" hours, ")
+        .appendMinutes().appendSuffix(" minutes, ")
+        .appendSeconds().appendSuffix(" seconds")
+        .printZeroNever()
+        .toFormatter()
+        .print(new Period(new DateTime(latestStartTime), new DateTime()));        
         
         StringBuilder theMessage = new StringBuilder();
         theMessage.append("Daily activity report for host " + theHost + ", generated on " + new Date() + ".\n");
         theMessage.append("Counts all activity over the past seven days.\n\n");
+        theMessage.append("Last clean match started " + sinceLastMatch + " ago, on " + new DateTime(latestStartTime) + ".\n");
         theMessage.append("Total matches: " + nMatches + "\n");
         theMessage.append("Percentage abandoned: " + trimNumber(fractionAbandoned.getWeightedAverage()*100) + "%\n");
         theMessage.append("Percentage aborted: " + trimNumber(fractionAborted.getWeightedAverage()*100) + "%\n");
@@ -128,8 +144,7 @@ public class HostReport {
         	theMessage.append("Unique 7DA skilled players: " + distinctSkilledPlayers.size() + "\n");
         }
         theMessage.append("Unique 7DA players: " + distinctPlayers.size() + "\n");
-        theMessage.append("Unique 7DA games: " + distinctGames.size() + "\n");        
-        theMessage.append("Last match started on " + new Date(latestStartTime) + "\n");
+        theMessage.append("Unique 7DA games: " + distinctGames.size() + "\n");
         
         Properties props = new Properties();
         Session session = Session.getDefaultInstance(props, null);
