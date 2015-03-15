@@ -84,7 +84,7 @@ public class PlayerReport {
         StringBuilder theMessage = new StringBuilder();
         theMessage.append("Daily activity report for player " + thePlayer + ", generated on " + new Date() + ".\n");
         theMessage.append("Counts all activity over the past seven days.\n\n");
-        theMessage.append("Last clean match started " + sinceLastMatch + " ago, on " + new DateTime(latestCleanStartTime) + ".\n");        
+        theMessage.append("Last clean match started " + sinceLastMatch + " ago.\n");        
         theMessage.append("Total matches: " + nMatches + "\n");
         theMessage.append("Percentage with errors: " + trimNumber(myAvgErrors.getWeightedAverage()*100) + "%\n");
         theMessage.append("Avg score, for clean matches: " + trimNumber(myAvgScore.getWeightedAverage()) + "\n");

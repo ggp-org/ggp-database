@@ -132,7 +132,7 @@ public class HostReport {
         StringBuilder theMessage = new StringBuilder();
         theMessage.append("Daily activity report for host " + theHost + ", generated on " + new Date() + ".\n");
         theMessage.append("Counts all activity over the past seven days.\n\n");
-        theMessage.append("Last clean match started " + sinceLastMatch + " ago, on " + new DateTime(latestStartTime) + ".\n");
+        theMessage.append("Last clean match started " + sinceLastMatch + " ago.\n");
         theMessage.append("Total matches: " + nMatches + "\n");
         theMessage.append("Percentage abandoned: " + trimNumber(fractionAbandoned.getWeightedAverage()*100) + "%\n");
         theMessage.append("Percentage aborted: " + trimNumber(fractionAborted.getWeightedAverage()*100) + "%\n");
