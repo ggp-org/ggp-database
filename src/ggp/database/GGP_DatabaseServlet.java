@@ -4,7 +4,6 @@ import static com.google.appengine.api.taskqueue.RetryOptions.Builder.withTaskRe
 import static com.google.appengine.api.taskqueue.TaskOptions.Builder.withUrl;
 import external.JSON.JSONException;
 import external.JSON.JSONObject;
-import ggp.database.cron.CleanupOldBlobs;
 import ggp.database.cron.UpdateOngoing;
 import ggp.database.logs.MatchLog;
 import ggp.database.matches.CondensedMatch;
@@ -84,9 +83,6 @@ public class GGP_DatabaseServlet extends HttpServlet {
             for (DailyReport theReport : Persistence.loadAll(DailyReport.class)) {
             	theReport.generateReport();
             }
-        	return;
-        } else if (reqURI.equals("/cron/cleanup_old_blobs")) {
-        	CleanupOldBlobs.cleanupOldBlobs();
         	return;
         } else if (req.getRequestURI().equals("/tasks/update_stats")) {
             if (isDatastoreWriteable()) {

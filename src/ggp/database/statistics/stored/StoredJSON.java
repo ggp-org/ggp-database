@@ -48,9 +48,9 @@ public abstract class StoredJSON {
         		GcsService gcsService = GcsServiceFactory.createGcsService();
         		GcsFilename filename = new GcsFilename("ggp-database-storedjson", thePrimaryKey);
         	    GcsInputChannel readChannel = gcsService.openReadChannel(filename, 0);
-        	    String theBlobData = new BufferedReader(Channels.newReader(readChannel, "UTF8")).readLine();
+        	    String theStoredData = new BufferedReader(Channels.newReader(readChannel, "UTF8")).readLine();
         	    readChannel.close();
-        	    return new JSONObject(StringCompressor.decompress(theBlobData));
+        	    return new JSONObject(StringCompressor.decompress(theStoredData));
     	    } catch (Exception e) {
     	    	throw new RuntimeException(e);
     	    }
