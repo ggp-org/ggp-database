@@ -3,17 +3,11 @@ package ggp.database.statistics.stored;
 import java.io.BufferedReader;
 import java.io.PrintWriter;
 import java.nio.channels.Channels;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.TreeSet;
 
 import org.ggp.galaxy.shared.persistence.Persistence;
 
-import external.JSON.JSONArray;
 import external.JSON.JSONException;
 import external.JSON.JSONObject;
-import external.JSON.JSONString;
 import ggp.database.statistics.StringCompressor;
 
 import javax.jdo.PersistenceManager;
@@ -64,7 +58,7 @@ public abstract class StoredJSON {
     }
     
     public void setJSON(JSONObject theJSON) {
-    	String theStoredData = StringCompressor.compress(truncateDoublesForJSON(theJSON));
+    	String theStoredData = StringCompressor.compress(theJSON.toString());
 
     	if (theStoredData.length() < 100000) {
     		theData = new Text(theStoredData);
@@ -96,90 +90,5 @@ public abstract class StoredJSON {
         PersistenceManager pm = Persistence.getPersistenceManager();
         pm.makePersistent(this);
         pm.close();        
-    }
-    
-    // This method truncates doubles stored in JSON objects. This results in
-    // an average 25% savings in storage, because the JSON objects are often
-    // dominated by variable names (which compress well, since they're often
-    // repeated) and doubles (with many decimal places, which don't compress
-    // well since they're hard to predict). Since a high degree of precision
-    // isn't necessary for the statistics we're storing, this function can be
-    // used to truncate the doubles to two decimal places.
-    static String truncateDoublesForJSON(Object x) {
-        try {
-            if (x instanceof JSONObject) {
-                JSONObject theObject = (JSONObject)x;
-                
-                // Sort the keys
-                TreeSet<String> t = new TreeSet<String>();
-                Iterator<?> i = theObject.keys();
-                while (i.hasNext()) t.add(i.next().toString());
-                Iterator<String> keys = t.iterator();
-                
-                StringBuffer sb = new StringBuffer("{");    
-                while (keys.hasNext()) {
-                    if (sb.length() > 1) {
-                        sb.append(',');
-                    }
-                    Object o = keys.next();
-                    sb.append(JSONObject.quote(o.toString()));
-                    sb.append(':');
-                    sb.append(truncateDoublesForJSON(theObject.get(o.toString())));
-                }
-                sb.append('}');
-                return sb.toString();
-            } else if (x instanceof JSONArray) {
-                JSONArray theArray = (JSONArray)x;
-                StringBuffer sb = new StringBuffer();
-                sb.append("[");
-                int len = theArray.length();
-                for (int i = 0; i < len; i += 1) {
-                    if (i > 0) {
-                        sb.append(",");
-                    }
-                    sb.append(truncateDoublesForJSON(theArray.get(i)));
-                }
-                sb.append("]");
-                return sb.toString();
-            } else {
-                if (x == null || x.equals(null)) {
-                    return "null";
-                }
-                if (x instanceof JSONString) {
-                    Object object;
-                    try {
-                        object = ((JSONString)x).toJSONString();
-                    } catch (Exception e) {
-                        throw new JSONException(e);
-                    }
-                    if (object instanceof String) {
-                        return (String)object;
-                    }
-                    throw new JSONException("Bad value from toJSONString: " + object);
-                }
-                if (x instanceof Number) {
-                	if (x instanceof Double) {
-                		x = Math.floor((Double)x*100)/100.0;
-                	}
-                    return JSONObject.numberToString((Number)x);
-                }
-                if (x instanceof Boolean || x instanceof JSONObject ||
-                        x instanceof JSONArray) {
-                    return x.toString();
-                }
-                if (x instanceof Map) {
-                    return truncateDoublesForJSON(new JSONObject((Map<?,?>)x)).toString();
-                }
-                if (x instanceof Collection) {
-                    return truncateDoublesForJSON(new JSONArray((Collection<?>)x)).toString();
-                }
-                if (x.getClass().isArray()) {
-                    return truncateDoublesForJSON(new JSONArray(x)).toString();
-                }
-                return JSONObject.quote(x.toString());
-            }
-        } catch (Exception e) {
-            return null;
-        }            
     }    
 }
