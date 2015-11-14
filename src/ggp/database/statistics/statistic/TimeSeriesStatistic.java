@@ -8,6 +8,9 @@ import external.JSON.JSONException;
 import external.JSON.JSONArray;
 
 public abstract class TimeSeriesStatistic extends Statistic {
+    // Arbitrary values chosen to make time series data manageable.
+    // One week buckets, beginning on on 4/17/2009. This will mean
+    // there are <1000 buckets until mid-2028.
     public static final long timeStart = 1240000000000L;
     public static final long timeInterval = 604800000L;    
     
