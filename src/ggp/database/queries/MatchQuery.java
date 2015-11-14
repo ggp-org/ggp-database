@@ -67,6 +67,13 @@ public class MatchQuery {
                     return;
                 }
                 queryFilter += "gameMetaURL == '" + theGame + "'";
+            } else if (theVerb.equals("filterTournament")) {
+                String theTournament = theSplitParams.pop();
+                if (theTournament.isEmpty()) {
+                    resp.setStatus(404);
+                    return;
+                }
+                queryFilter += "tournamentNameFromHost == '" + theTournament + "'";            	
             } else if (theVerb.equals("filterActiveSet")) {
                 String sixHoursAgo = "" + (System.currentTimeMillis() - 21600000L);
                 queryFilter += "isCompleted == false && isAborted == false && startTime > " + sixHoursAgo;
