@@ -40,12 +40,14 @@ public abstract class Statistic {
     // OVERRIDE: for returning the final stats
     protected abstract Object getFinalForm() throws JSONException;
     protected Object getPerGameFinalForm(String forGame) throws JSONException { return null; }
-    protected Object getPerPlayerFinalForm(String forPlayer) throws JSONException { return null; }    
+    protected Object getPerPlayerFinalForm(String forPlayer) throws JSONException { return null; }
+    protected Object getPerTournamentFinalForm(String forTournament) throws JSONException { return null; }
 
     // OVERRIDE only if you need to return multiple forms for a single statistic
     public Set<FinalForm> getFinalForms() throws JSONException { return new HashSet<FinalForm>(Arrays.asList(new FinalForm[] {new FinalForm(camelCase(getClass().getSimpleName()), getFinalForm())})); }
     public Set<FinalForm> getPerGameFinalForms(String forGame) throws JSONException { return new HashSet<FinalForm>(Arrays.asList(new FinalForm[] {new FinalForm(camelCase(getClass().getSimpleName()), getPerGameFinalForm(forGame))})); }
     public Set<FinalForm> getPerPlayerFinalForms(String forPlayer) throws JSONException { return new HashSet<FinalForm>(Arrays.asList(new FinalForm[] {new FinalForm(camelCase(getClass().getSimpleName()), getPerPlayerFinalForm(forPlayer))})); }
+    public Set<FinalForm> getPerTournamentFinalForms(String forTournament) throws JSONException { return new HashSet<FinalForm>(Arrays.asList(new FinalForm[] {new FinalForm(camelCase(getClass().getSimpleName()), getPerTournamentFinalForm(forTournament))})); }
     
     // ==== Utility functions ====
 

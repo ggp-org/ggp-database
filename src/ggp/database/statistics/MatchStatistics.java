@@ -3,11 +3,13 @@ package ggp.database.statistics;
 import ggp.database.statistics.stored.FinalGameStats;
 import ggp.database.statistics.stored.FinalOverallStats;
 import ggp.database.statistics.stored.FinalPlayerStats;
+import ggp.database.statistics.stored.FinalTournamentStats;
 import ggp.database.statistics.stored.IntermediateStatistics;
 
 import java.io.IOException;
 
 import javax.servlet.http.*;
+
 import external.JSON.JSONObject;
 
 @SuppressWarnings("serial")
@@ -25,6 +27,9 @@ public class MatchStatistics extends HttpServlet {
             } else if (theStatistic.startsWith("games/")) {
                 theStatistic = theStatistic.replaceFirst("games/", "");
                 theResponse = FinalGameStats.load(theLabel, theStatistic).getJSON();
+            } else if (theStatistic.startsWith("tournaments/")) {
+                theStatistic = theStatistic.replaceFirst("tournaments/", "");
+                theResponse = FinalTournamentStats.load(theLabel, theStatistic).getJSON();            	
             } else if (theStatistic.equals("intermediate")) {
                 theResponse = IntermediateStatistics.loadIntermediateStatistics(theLabel);
             }

@@ -17,6 +17,7 @@ import ggp.database.statistics.statistic.implementation.EloRank;
 import ggp.database.statistics.statistic.implementation.AverageScore;
 import ggp.database.statistics.statistic.implementation.ErrorRateForPlayer;
 import ggp.database.statistics.statistic.implementation.LastPlayed;
+import ggp.database.statistics.statistic.implementation.LastTournamentUpdate;
 import ggp.database.statistics.statistic.implementation.Matches;
 import ggp.database.statistics.statistic.implementation.MatchesAbandoned;
 import ggp.database.statistics.statistic.implementation.MatchesAborted;
@@ -29,15 +30,18 @@ import ggp.database.statistics.statistic.implementation.MatchesStatErrors;
 import ggp.database.statistics.statistic.implementation.NetScore;
 import ggp.database.statistics.statistic.implementation.ObservedGames;
 import ggp.database.statistics.statistic.implementation.ObservedPlayers;
+import ggp.database.statistics.statistic.implementation.ObservedTournaments;
 import ggp.database.statistics.statistic.implementation.PlayerHoursConsumed;
 import ggp.database.statistics.statistic.implementation.RoleCorrelationWithSkill;
 import ggp.database.statistics.statistic.implementation.RolePlayerAverageScore;
 import ggp.database.statistics.statistic.implementation.StatsVersion;
+import ggp.database.statistics.statistic.implementation.TournamentMatchesCompleted;
 import ggp.database.statistics.statistic.implementation.UpdatedAt;
 import ggp.database.statistics.statistic.implementation.WinsVersusPlayerOnGame;
 import ggp.database.statistics.stored.FinalGameStats;
 import ggp.database.statistics.stored.FinalOverallStats;
 import ggp.database.statistics.stored.FinalPlayerStats;
+import ggp.database.statistics.stored.FinalTournamentStats;
 import ggp.database.statistics.stored.IntermediateStatistics;
 
 import java.io.IOException;
@@ -156,13 +160,15 @@ public class StatisticsComputation implements Statistic.Reader {
         }
     }
 
-    private Set<Statistic> registeredStatistics;
-    private Set<String> alteredPlayers;
+    private Set<Statistic> registeredStatistics;    
     private Set<String> alteredGames;
+    private Set<String> alteredPlayers;
+    private Set<String> alteredTournaments;
     
     public StatisticsComputation () {
         alteredGames = new HashSet<String>();
         alteredPlayers = new HashSet<String>();
+        alteredTournaments = new HashSet<String>();
         registeredStatistics = new HashSet<Statistic>();
         /* TODO: get this working
         for (Statistic aStat : ServiceLoader.load(Statistic.class)) {
@@ -198,6 +204,9 @@ public class StatisticsComputation implements Statistic.Reader {
         registeredStatistics.add(new UpdatedAt());
         registeredStatistics.add(new WinsVersusPlayerOnGame());
         registeredStatistics.add(new ErrorRateForPlayer());
+        registeredStatistics.add(new TournamentMatchesCompleted());
+        registeredStatistics.add(new ObservedTournaments());
+        registeredStatistics.add(new LastTournamentUpdate());
     }
     
     @SuppressWarnings("unchecked")
@@ -214,7 +223,10 @@ public class StatisticsComputation implements Statistic.Reader {
             s.updateWithMatch(theMatch);
         }
         alteredPlayers.addAll(PerPlayerStatistic.getPlayerNames(theMatch));
-        alteredGames.add(theMatch.getProperty("gameMetaURL").toString());        
+        alteredGames.add(theMatch.getProperty("gameMetaURL").toString());
+        if (theMatch.getProperty("tournamentNameFromHost") != null) {
+        	alteredTournaments.add((String)theMatch.getProperty("tournamentNameFromHost"));
+        }
     }
     
     public void finalizeComputation() {
@@ -267,7 +279,22 @@ public class StatisticsComputation implements Statistic.Reader {
                 }
                 new FinalGameStats(theLabel, gameName).setJSON(gameStats);
             }
-
+            
+            // Store the per-tournament statistics
+            // Only write statistics for tournaments that appeared in added matches
+            for (String tournamentName : alteredTournaments) {
+                JSONObject tournamentStats = new JSONObject();
+                for (Statistic s : registeredStatistics) {
+                    for (Statistic.FinalForm f : s.getPerTournamentFinalForms(tournamentName)) {
+                        activeStat = s.getClass().getSimpleName() + ":" + f.name;
+                        if (f.value != null) {
+                        	tournamentStats.put(f.name, f.value);
+                        }
+                    }
+                }
+                new FinalTournamentStats(theLabel, tournamentName).setJSON(tournamentStats);
+            }
+            
             // Store the per-player statistics
             // Only write statistics for players who appeared in added matches
             for (String playerName : alteredPlayers) {
