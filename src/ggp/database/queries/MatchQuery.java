@@ -94,6 +94,9 @@ public class MatchQuery {
             if (theDomain.equals("recent")) {            
                 query.setOrdering("startTime desc");
                 query.setRange(0, 50);
+            } else if (theDomain.equals("recent1000")) {
+            	query.setOrdering("startTime desc");
+            	query.setRange(0, 1000);
             } else {
                 resp.setStatus(404);
                 return;
