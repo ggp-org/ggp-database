@@ -3,6 +3,9 @@
 	<application>ggp-database</application>
 	<version>1</version>
 	<threadsafe>true</threadsafe>
+
+	<!-- Protip: switch to more expensive instances during tournaments -->
+	<instance-class>F1</instance-class>
 	
 	<!-- Configure java.util.logging -->
 	<system-properties>
